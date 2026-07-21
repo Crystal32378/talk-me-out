@@ -1,0 +1,198 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
+  --font-mono: var(--font-geist-mono);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-warm-accent: var(--warm-accent);
+
+  --color-verdict-buy: var(--verdict-buy);
+  --color-verdict-try: var(--verdict-try);
+  --color-verdict-borrow: var(--verdict-borrow);
+  --color-verdict-walk: var(--verdict-walk);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Talk Me Out of It — dark editorial interrogation-room palette */
+  --background: #0a0a0a;
+  --foreground: #eaeaea;
+  --surface: #151515;
+  --surface-foreground: #eaeaea;
+  --card: #1c1c1e;
+  --card-foreground: #eaeaea;
+  --popover: #1c1c1e;
+  --popover-foreground: #eaeaea;
+  --primary: #ff3b30;
+  --primary-foreground: #ffffff;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #eaeaea;
+  --muted: #2c2c2e;
+  --muted-foreground: #8e8e93;
+  --accent: #ff3b30;
+  --accent-foreground: #ffffff;
+  --warm-accent: #ff6b35;
+  --destructive: #ff3b30;
+  --border: #2c2c2e;
+  --input: #2c2c2e;
+  --ring: #ff3b30;
+
+  --verdict-buy: #30d158;
+  --verdict-try: #ffd60a;
+  --verdict-borrow: #ff9f0a;
+  --verdict-walk: #ff3b30;
+
+  --chart-1: #ff3b30;
+  --chart-2: #ff9f0a;
+  --chart-3: #ffd60a;
+  --chart-4: #30d158;
+  --chart-5: #8e8e93;
+
+  --sidebar: #151515;
+  --sidebar-foreground: #eaeaea;
+  --sidebar-primary: #ff3b30;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c2c2e;
+  --sidebar-accent-foreground: #eaeaea;
+  --sidebar-border: #2c2c2e;
+  --sidebar-ring: #ff3b30;
+}
+
+.dark {
+  /* Same as :root — the app is always dark */
+  --background: #0a0a0a;
+  --foreground: #eaeaea;
+  --surface: #151515;
+  --surface-foreground: #eaeaea;
+  --card: #1c1c1e;
+  --card-foreground: #eaeaea;
+  --popover: #1c1c1e;
+  --popover-foreground: #eaeaea;
+  --primary: #ff3b30;
+  --primary-foreground: #ffffff;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #eaeaea;
+  --muted: #2c2c2e;
+  --muted-foreground: #8e8e93;
+  --accent: #ff3b30;
+  --accent-foreground: #ffffff;
+  --warm-accent: #ff6b35;
+  --destructive: #ff3b30;
+  --border: #2c2c2e;
+  --input: #2c2c2e;
+  --ring: #ff3b30;
+
+  --verdict-buy: #30d158;
+  --verdict-try: #ffd60a;
+  --verdict-borrow: #ff9f0a;
+  --verdict-walk: #ff3b30;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0a0a0a;
+    color: #eaeaea;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+  ::selection {
+    background-color: #ff3b30;
+    color: #ffffff;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .grain-overlay {
+    position: relative;
+  }
+  .grain-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 3px 3px;
+    mix-blend-mode: overlay;
+  }
+  .scanline {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.02) 2px,
+      rgba(255, 255, 255, 0.02) 4px
+    );
+  }
+  .verdict-stamp {
+    font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 3px solid currentColor;
+    padding: 0.5rem 1.25rem;
+    display: inline-block;
+    transform: rotate(-4deg);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4) inset;
+  }
+  .glow-red {
+    box-shadow: 0 0 30px rgba(255, 59, 48, 0.35), 0 0 60px rgba(255, 59, 48, 0.15);
+  }
+}

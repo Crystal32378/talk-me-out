@@ -1,0 +1,51 @@
+<svg width="600" height="800" viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="800" fill="#ffffff"/>
+  <!-- Cashmere wrap silhouette (draped rectangle) -->
+  <g>
+    <!-- Wrap body (draped) -->
+    <path d="M 120 180 Q 180 160 240 180 Q 300 200 360 180 Q 420 160 480 180 L 510 240 Q 490 320 470 400 Q 460 500 440 600 Q 430 680 420 720 L 380 720 Q 360 640 350 560 Q 340 480 330 400 Q 320 340 300 320 Q 280 340 270 400 Q 260 480 250 560 Q 240 640 220 720 L 180 720 Q 170 680 160 600 Q 150 500 140 400 Q 130 320 110 240 Z"
+          fill="#e8dcc8" stroke="#a89878" stroke-width="2"/>
+    <!-- Fringe at bottom -->
+    <g stroke="#a89878" stroke-width="1.5">
+      <line x1="180" y1="720" x2="178" y2="745"/>
+      <line x1="195" y1="720" x2="193" y2="748"/>
+      <line x1="210" y1="720" x2="208" y2="745"/>
+      <line x1="220" y1="720" x2="220" y2="750"/>
+      <line x1="380" y1="720" x2="380" y2="750"/>
+      <line x1="390" y1="720" x2="388" y2="748"/>
+      <line x1="405" y1="720" x2="403" y2="745"/>
+      <line x1="420" y1="720" x2="418" y2="748"/>
+    </g>
+    <!-- Fold lines / draping -->
+    <g stroke="#c8b8a0" stroke-width="1" opacity="0.7" fill="none">
+      <path d="M 150 220 Q 200 240 250 230"/>
+      <path d="M 260 240 Q 300 250 340 240"/>
+      <path d="M 350 220 Q 400 240 450 230"/>
+      <path d="M 180 350 Q 230 370 280 360"/>
+      <path d="M 320 350 Q 370 370 420 360"/>
+      <path d="M 200 480 Q 240 500 280 490"/>
+      <path d="M 320 480 Q 360 500 400 490"/>
+      <path d="M 220 610 Q 250 625 280 615"/>
+      <path d="M 320 610 Q 350 625 380 615"/>
+    </g>
+    <!-- Subtle cashmere texture (tiny dots) -->
+    <g fill="#b8a890" opacity="0.4">
+      <circle cx="200" cy="280" r="1"/>
+      <circle cx="250" cy="290" r="1"/>
+      <circle cx="300" cy="285" r="1"/>
+      <circle cx="350" cy="290" r="1"/>
+      <circle cx="400" cy="280" r="1"/>
+      <circle cx="220" cy="400" r="1"/>
+      <circle cx="270" cy="410" r="1"/>
+      <circle cx="330" cy="410" r="1"/>
+      <circle cx="380" cy="400" r="1"/>
+      <circle cx="240" cy="540" r="1"/>
+      <circle cx="290" cy="550" r="1"/>
+      <circle cx="340" cy="550" r="1"/>
+      <circle cx="260" cy="660" r="1"/>
+      <circle cx="310" cy="670" r="1"/>
+      <circle cx="360" cy="660" r="1"/>
+    </g>
+  </g>
+  <text x="300" y="770" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#8e8e93" letter-spacing="2">CASHMERE WRAP</text>
+</svg>
