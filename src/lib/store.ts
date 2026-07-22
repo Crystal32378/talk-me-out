@@ -122,7 +122,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   setTryOnSuccess: (result) =>
     set({ tryOnStatus: "success", tryOn: result, tryOnError: null }),
   setTryOnError: (error) =>
-    set({ tryOnStatus: "error", tryOnError: error, tryOn: null }),
+    set((state) => ({
+      tryOnStatus: "error",
+      tryOnError: error,
+      tryOn: state.tryOn,
+    })),
 
   setAnswer: (questionId, score) =>
     set((state) => ({

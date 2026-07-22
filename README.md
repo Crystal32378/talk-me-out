@@ -147,7 +147,7 @@ bun run dev
 POST /api/tryon
 Content-Type: multipart/form-data
 
-person:      <File>    # JPG/PNG/WebP, max 10 MB
+person:      <File>    # JPG/PNG/WebP, compressed client-side before upload
 garment:     <File>    # JPG/PNG/WebP
 garmentType: <string>  # "Top" | "Outerwear" | "Dress" | "Bottom" | "Unsure"
 ```
@@ -194,11 +194,11 @@ The final hackathon submission must demonstrate real YouCam API integration, whi
 
 ### Privacy
 
-- Personal photos are used **only** for the active try-on request.
+- Personal photos are sent to YouCam **only** for the active try-on request.
 - Photos are **not** saved to a permanent user history.
 - Photos are **not** placed in `localStorage`.
 - The Zustand store keeps the photo only in memory for the duration of the session.
-- The server proxy downloads the YouCam result and returns it as a data URL — no third-party storage is involved.
+- YouCam temporarily processes and stores uploads and generated results under its service terms. The server proxy downloads the result immediately and returns a compressed data URL to the browser.
 - `.env.local` (containing the API key) is gitignored and never committed.
 
 ### Roast system red lines

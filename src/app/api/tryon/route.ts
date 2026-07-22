@@ -33,7 +33,7 @@ export const maxDuration = 60;
  *     so the client renders a clearly-labeled side-by-side preview.
  *
  * Expected form fields:
- *   - person: File (JPG/PNG/WebP, max ~10 MB)
+ *   - person: File (JPG/PNG/WebP, max 2 MB after client compression)
  *   - garment: File
  *   - garmentType: string ("Top" | "Outerwear" | "Dress" | "Bottom" | "Unsure")
  *
@@ -52,19 +52,51 @@ export const maxDuration = 60;
 
 const ACCEPTED_PERSON = ["image/jpeg", "image/png", "image/webp"];
 const ACCEPTED_GARMENT = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 2_500_000;
 
 /** Normalise any image buffer to JPEG so we always send a consistent type to YouCam. */
 async function normalizeToJpeg(
   buffer: Buffer,
-  mime: string,
 ): Promise<{ buffer: Buffer; contentType: "image/jpeg" }> {
   // sharp auto-detects format from the buffer contents.
   const out = await sharp(buffer)
-    .flatten({ background: "#ffffff" }) // remove alpha for JPEG
-    .jpeg({ quality: 92, mozjpeg: true })
+    .rotate()
+    .resize({
+      width: 1600,
+      height: 2000,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: 84, mozjpeg: true })
     .toBuffer();
   return { buffer: out, contentType: "image/jpeg" };
+}
+
+async function compressResponseDataUrl(dataUrl: string): Promise<string> {
+  const match = /^data:[^;]+;base64,(.+)$/.exec(dataUrl);
+  if (!match) throw new Error("invalid-result-data-url");
+
+  let width = 1400;
+  let quality = 84;
+  const source = Buffer.from(match[1], "base64");
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const output = await sharp(source)
+      .rotate()
+      .resize({ width, height: Math.round(width * 1.34), fit: "inside", withoutEnlargement: true })
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+    if (output.length <= MAX_RESPONSE_BYTES || attempt === 3) {
+      return `data:image/jpeg;base64,${output.toString("base64")}`;
+    }
+    width = Math.round(width * 0.82);
+    quality = Math.max(68, quality - 6);
+  }
+
+  throw new Error("result-compression-failed");
 }
 
 /**
@@ -167,7 +199,7 @@ export async function POST(req: NextRequest) {
     }
     if (personFile.size > MAX_BYTES || garmentFile.size > MAX_BYTES) {
       return NextResponse.json(
-        { ok: false, error: "size", message: "Image exceeds 10 MB limit." },
+        { ok: false, error: "size", message: "Compressed image exceeds 2 MB limit." },
         { status: 400 },
       );
     }
@@ -181,10 +213,10 @@ export async function POST(req: NextRequest) {
     let garmentBuffer: Buffer;
     let garmentContentType: "image/jpeg" | "image/png";
     try {
-      const p = await normalizeToJpeg(personBufferRaw, personFile.type);
+      const p = await normalizeToJpeg(personBufferRaw);
       personBuffer = p.buffer;
       personContentType = p.contentType;
-      const g = await normalizeToJpeg(garmentBufferRaw, garmentFile.type);
+      const g = await normalizeToJpeg(garmentBufferRaw);
       garmentBuffer = g.buffer;
       garmentContentType = g.contentType;
     } catch (err) {
@@ -215,7 +247,7 @@ export async function POST(req: NextRequest) {
         const elapsed = Date.now() - tStart;
         return NextResponse.json({
           ok: true,
-          imageUrl: result.imageUrl,
+          imageUrl: await compressResponseDataUrl(result.imageUrl),
           demo: false,
           fallback: false,
           unitsUsed: result.unitsUsed,

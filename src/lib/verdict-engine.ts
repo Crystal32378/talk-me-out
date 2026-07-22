@@ -62,7 +62,6 @@ function buildEvidence(answers: AnswerMap): VerdictEvidence[] {
 function pickGarmentRoastLine(garment: Garment | null): string | null {
   if (!garment) return null;
   const lines = garment.roastLines;
-  if (!lines || lines.length === 0) return null;
   // Pick deterministically so re-renders don't shuffle the line.
   return lines[0];
 }

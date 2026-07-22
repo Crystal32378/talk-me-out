@@ -199,7 +199,7 @@ export async function uploadImageBytes(
   const res = await fetch(upload.upload_url, {
     method: upload.upload_method || "PUT",
     headers,
-    body: bytes,
+    body: Uint8Array.from(bytes).buffer,
   });
 
   if (!res.ok) {

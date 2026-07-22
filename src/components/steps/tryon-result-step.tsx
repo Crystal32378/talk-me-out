@@ -17,6 +17,49 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([arr], { type: mime });
 }
 
+const MAX_UPLOAD_BYTES = 1_500_000;
+const MAX_UPLOAD_DIMENSION = 1600;
+
+async function compressForUpload(blob: Blob): Promise<Blob> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("image-load-failed"));
+      img.src = url;
+    });
+
+    const largestSide = Math.max(img.naturalWidth, img.naturalHeight);
+    let scale = Math.min(1, MAX_UPLOAD_DIMENSION / largestSide);
+    let quality = 0.84;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("no-canvas-context");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const compressed = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", quality),
+      );
+      if (!compressed) throw new Error("canvas-to-blob-failed");
+      if (compressed.size <= MAX_UPLOAD_BYTES || attempt === 4) return compressed;
+
+      scale *= 0.8;
+      quality = Math.max(0.62, quality - 0.06);
+    }
+
+    throw new Error("image-compression-failed");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 async function fetchGarmentImage(url: string): Promise<Blob> {
   // For local SVGs in /public, fetch and convert to PNG blob.
   if (url.startsWith("/") || url.startsWith(window.location.origin)) {
@@ -108,8 +151,10 @@ export function TryOnResultStep() {
     }, 1800);
 
     try {
-      const personBlob = dataUrlToBlob(personImage);
-      const garmentBlob = await fetchGarmentImage(garment.imageUrl);
+      const [personBlob, garmentBlob] = await Promise.all([
+        compressForUpload(dataUrlToBlob(personImage)),
+        fetchGarmentImage(garment.imageUrl).then(compressForUpload),
+      ]);
 
       const form = new FormData();
       form.append("person", personBlob, "person.jpg");

@@ -141,7 +141,7 @@ export const UI_COPY = {
     kicker: "Virtual fitting room · anti-impulse mode",
     title: "Looks amazing on you.\nNow let's talk about whether you should buy it.",
     body: "Most virtual try-on tools are designed to help you check out faster. This one is not. Upload a photo, pick a garment, see how it looks, then answer five honest questions about whether it actually fits your life.",
-    privacy: "Your image is used only to generate this try-on experience. The MVP does not save personal photos to a permanent user history.",
+    privacy: "Your photo is sent to YouCam only to generate this try-on result. This MVP does not save personal photos to a permanent user history.",
     primaryCta: "Begin the interrogation",
     secondaryCta: "How this works",
     stepsLabel: "The flow",
@@ -157,7 +157,7 @@ export const UI_COPY = {
     heading: "Show us the evidence.",
     body: "Upload a clear photo. Full-body or half-body works best.",
     privacy:
-      "Your image is used only to generate this try-on experience. The MVP does not save personal photos to a permanent user history.",
+      "Your photo is sent to YouCam only to generate this try-on result. This MVP does not save personal photos to a permanent user history.",
     uploadCta: "Upload from device",
     cameraCta: "Take a photo",
     dragHint: "Drag and drop an image here",
