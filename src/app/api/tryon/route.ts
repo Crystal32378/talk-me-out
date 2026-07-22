@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { readFile } from "fs/promises";
+import path from "path";
 import {
   getYouCamConfig,
   mapGarmentTypeToCategory,
@@ -65,40 +67,39 @@ async function normalizeToJpeg(
   return { buffer: out, contentType: "image/jpeg" };
 }
 
-async function buildDemoComposite(
-  personBuffer: Buffer,
-  garmentBuffer: Buffer,
-): Promise<{ ok: true; imageUrl: string } | { ok: false; error: string }> {
+/**
+ * Demo fallback: returns a pre-generated real YouCam try-on result.
+ *
+ * This image was produced by a real, successful YouCam Apparel VTO API
+ * call (person photo + beige wool coat → AI-generated try-on composite)
+ * and saved to public/demo/fallback-result.jpg. It is clearly labeled
+ * "DEMO MODE — PRE-GENERATED RESULT" so it can never be confused with
+ * a fresh API call.
+ *
+ * The pre-generated result depicts a specific person + garment pair.
+ * When demo mode is triggered, we return this image as-is — the UI
+ * explains that the user's uploaded photos were NOT sent to YouCam
+ * and that this is a pre-generated demonstration result. This is more
+ * honest and visually correct than the previous approach of compositing
+ * the garment over the user's face.
+ *
+ * The person and garment source images are also shipped in public/demo/
+ * so reviewers can verify the trio matches.
+ */
+async function buildDemoComposite(): Promise<{
+  ok: true;
+  imageUrl: string;
+} | { ok: false; error: string }> {
   try {
-    const person = await sharp(personBuffer)
-      .resize(768, 1024, { fit: "cover", position: "centre" })
-      .jpeg({ quality: 90 })
-      .toBuffer();
+    const demoResultPath = path.join(
+      process.cwd(),
+      "public",
+      "demo",
+      "fallback-result.jpg",
+    );
+    const buf = await readFile(demoResultPath);
 
-    const garmentSticker = await sharp(garmentBuffer)
-      .resize(560, 560, { fit: "inside", withoutEnlargement: true })
-      .extend({
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
-      .png()
-      .toBuffer();
-
-    const composited = await sharp(person)
-      .composite([
-        {
-          input: garmentSticker,
-          top: 180,
-          left: 104,
-          blend: "over",
-        },
-      ])
-      .jpeg({ quality: 88 })
-      .toBuffer();
-
+    // Overlay a clear DEMO MODE label.
     const labelSvg = Buffer.from(
       `<svg width="768" height="1024" xmlns="http://www.w3.org/2000/svg">
         <rect x="0" y="950" width="768" height="74" fill="rgba(0,0,0,0.78)"/>
@@ -106,16 +107,17 @@ async function buildDemoComposite(
       </svg>`,
     );
 
-    const finalBuf = await sharp(composited)
+    const finalBuf = await sharp(buf)
+      .resize(768, 1024, { fit: "cover", position: "centre" })
       .composite([{ input: labelSvg, top: 0, left: 0, blend: "over" }])
-      .jpeg({ quality: 86 })
+      .jpeg({ quality: 88 })
       .toBuffer();
 
     const dataUrl = `data:image/jpeg;base64,${finalBuf.toString("base64")}`;
     return { ok: true, imageUrl: dataUrl };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    return { ok: false, error: `Demo compositing failed: ${msg}` };
+    return { ok: false, error: `Demo fallback failed: ${msg}` };
   }
 }
 
@@ -224,7 +226,7 @@ export async function POST(req: NextRequest) {
         // Fall through to demo mode. Only the machine-readable error code is
         // returned to the client; the raw error message is kept server-side
         // to avoid leaking YouCam internal details.
-        const demo = await buildDemoComposite(personBufferRaw, garmentBufferRaw);
+        const demo = await buildDemoComposite();
         if (demo.ok) {
           return NextResponse.json({
             ok: true,
@@ -243,7 +245,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) No YouCam config — straight to demo mode.
-    const demo = await buildDemoComposite(personBufferRaw, garmentBufferRaw);
+    const demo = await buildDemoComposite();
     if (demo.ok) {
       return NextResponse.json({
         ok: true,

@@ -1,51 +1,101 @@
 <svg width="600" height="800" viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
   <rect width="600" height="800" fill="#ffffff"/>
-  <!-- Cashmere wrap silhouette (draped rectangle) -->
-  <g>
-    <!-- Wrap body (draped) -->
-    <path d="M 120 180 Q 180 160 240 180 Q 300 200 360 180 Q 420 160 480 180 L 510 240 Q 490 320 470 400 Q 460 500 440 600 Q 430 680 420 720 L 380 720 Q 360 640 350 560 Q 340 480 330 400 Q 320 340 300 320 Q 280 340 270 400 Q 260 480 250 560 Q 240 640 220 720 L 180 720 Q 170 680 160 600 Q 150 500 140 400 Q 130 320 110 240 Z"
-          fill="#e8dcc8" stroke="#a89878" stroke-width="2"/>
-    <!-- Fringe at bottom -->
-    <g stroke="#a89878" stroke-width="1.5">
-      <line x1="180" y1="720" x2="178" y2="745"/>
-      <line x1="195" y1="720" x2="193" y2="748"/>
-      <line x1="210" y1="720" x2="208" y2="745"/>
-      <line x1="220" y1="720" x2="220" y2="750"/>
-      <line x1="380" y1="720" x2="380" y2="750"/>
-      <line x1="390" y1="720" x2="388" y2="748"/>
-      <line x1="405" y1="720" x2="403" y2="745"/>
-      <line x1="420" y1="720" x2="418" y2="748"/>
-    </g>
-    <!-- Fold lines / draping -->
-    <g stroke="#c8b8a0" stroke-width="1" opacity="0.7" fill="none">
-      <path d="M 150 220 Q 200 240 250 230"/>
-      <path d="M 260 240 Q 300 250 340 240"/>
-      <path d="M 350 220 Q 400 240 450 230"/>
-      <path d="M 180 350 Q 230 370 280 360"/>
-      <path d="M 320 350 Q 370 370 420 360"/>
-      <path d="M 200 480 Q 240 500 280 490"/>
-      <path d="M 320 480 Q 360 500 400 490"/>
-      <path d="M 220 610 Q 250 625 280 615"/>
-      <path d="M 320 610 Q 350 625 380 615"/>
-    </g>
-    <!-- Subtle cashmere texture (tiny dots) -->
-    <g fill="#b8a890" opacity="0.4">
-      <circle cx="200" cy="280" r="1"/>
-      <circle cx="250" cy="290" r="1"/>
-      <circle cx="300" cy="285" r="1"/>
-      <circle cx="350" cy="290" r="1"/>
-      <circle cx="400" cy="280" r="1"/>
-      <circle cx="220" cy="400" r="1"/>
-      <circle cx="270" cy="410" r="1"/>
-      <circle cx="330" cy="410" r="1"/>
-      <circle cx="380" cy="400" r="1"/>
-      <circle cx="240" cy="540" r="1"/>
-      <circle cx="290" cy="550" r="1"/>
-      <circle cx="340" cy="550" r="1"/>
-      <circle cx="260" cy="660" r="1"/>
-      <circle cx="310" cy="670" r="1"/>
-      <circle cx="360" cy="660" r="1"/>
-    </g>
+  <!-- Cashmere wrap: a long, narrow draped rectangle with fringe,
+       folded casually over a hanger bar so it reads as a scarf/shawl,
+       not a pair of pants. -->
+  <defs>
+    <linearGradient id="wrapShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0e6d2"/>
+      <stop offset="100%" stop-color="#d8c8a8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Wooden hanger bar (context cue: this is a top accessory, not a bottom) -->
+  <g opacity="0.45">
+    <rect x="170" y="160" width="260" height="8" rx="4" fill="#8a6a4a"/>
+    <circle cx="300" cy="160" r="6" fill="#6a4a2a"/>
+    <path d="M 270 168 Q 300 200 330 168" fill="none" stroke="#8a6a4a" stroke-width="3"/>
   </g>
-  <text x="300" y="770" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#8e8e93" letter-spacing="2">CASHMERE WRAP</text>
+
+  <!-- Left draped end (long, narrow, with fringe at bottom) -->
+  <path d="M 130 240
+           Q 110 260 120 300
+           L 145 540
+           Q 150 580 165 600
+           L 200 600
+           Q 215 580 210 540
+           L 195 300
+           Q 200 260 185 240
+           Z"
+        fill="url(#wrapShade)" stroke="#a89878" stroke-width="2"/>
+
+  <!-- Right draped end (mirror of left) -->
+  <path d="M 470 240
+           Q 490 260 480 300
+           L 455 540
+           Q 450 580 435 600
+           L 400 600
+           Q 385 580 390 540
+           L 405 300
+           Q 400 260 415 240
+           Z"
+        fill="url(#wrapShade)" stroke="#a89878" stroke-width="2"/>
+
+  <!-- Center crossover (draped over the bar at top, joining the two ends) -->
+  <path d="M 185 240
+           Q 220 220 300 220
+           Q 380 220 415 240
+           Q 400 260 300 260
+           Q 200 260 185 240 Z"
+        fill="url(#wrapShade)" stroke="#a89878" stroke-width="2"/>
+
+  <!-- Fringe at bottom of left end -->
+  <g stroke="#a89878" stroke-width="2">
+    <line x1="150" y1="600" x2="148" y2="640"/>
+    <line x1="162" y1="600" x2="160" y2="645"/>
+    <line x1="175" y1="600" x2="174" y2="640"/>
+    <line x1="188" y1="600" x2="188" y2="645"/>
+    <line x1="200" y1="600" x2="200" y2="640"/>
+  </g>
+  <!-- Fringe at bottom of right end -->
+  <g stroke="#a89878" stroke-width="2">
+    <line x1="400" y1="600" x2="400" y2="640"/>
+    <line x1="412" y1="600" x2="412" y2="645"/>
+    <line x1="425" y1="600" x2="426" y2="640"/>
+    <line x1="438" y1="600" x2="440" y2="645"/>
+    <line x1="450" y1="600" x2="452" y2="640"/>
+  </g>
+
+  <!-- Subtle drape fold lines -->
+  <g stroke="#b8a890" stroke-width="1" opacity="0.6" fill="none">
+    <path d="M 150 300 Q 165 320 175 300"/>
+    <path d="M 155 380 Q 170 400 180 380"/>
+    <path d="M 160 460 Q 175 480 185 460"/>
+    <path d="M 420 300 Q 432 320 442 300"/>
+    <path d="M 425 380 Q 437 400 447 380"/>
+    <path d="M 430 460 Q 442 480 452 460"/>
+    <path d="M 230 245 Q 300 250 370 245"/>
+  </g>
+
+  <!-- Tiny cashmere texture dots -->
+  <g fill="#b8a890" opacity="0.35">
+    <circle cx="160" cy="350" r="1"/>
+    <circle cx="180" cy="370" r="1"/>
+    <circle cx="170" cy="420" r="1"/>
+    <circle cx="185" cy="440" r="1"/>
+    <circle cx="175" cy="490" r="1"/>
+    <circle cx="190" cy="510" r="1"/>
+    <circle cx="425" cy="350" r="1"/>
+    <circle cx="440" cy="370" r="1"/>
+    <circle cx="430" cy="420" r="1"/>
+    <circle cx="445" cy="440" r="1"/>
+    <circle cx="435" cy="490" r="1"/>
+    <circle cx="450" cy="510" r="1"/>
+    <circle cx="280" cy="235" r="1"/>
+    <circle cx="320" cy="235" r="1"/>
+  </g>
+
+  <!-- Caption -->
+  <text x="300" y="720" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#8e8e93" letter-spacing="2">CASHMERE WRAP</text>
+  <text x="300" y="745" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#b0b0b0" letter-spacing="1">(shawl · not a bottom)</text>
 </svg>

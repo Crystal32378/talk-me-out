@@ -92,8 +92,11 @@ export function buildVerdict(
   const verdict = getVerdictByScore(totalScore);
 
   const allEvidence = buildEvidence(answers);
-  // Show up to 3 key factors in the verdict card.
-  const evidence = allEvidence.slice(0, 3);
+  // Only show evidence that actually contributed risk (score > 0).
+  // Low-risk / supportive answers (score 0) are intentionally omitted —
+  // they should not be used as filler to reach a quota of three.
+  // If only one or two answers are high-risk, we show only those.
+  const evidence = allEvidence.filter((e) => e.score > 0).slice(0, 3);
 
   const garmentLine = pickGarmentRoastLine(garment);
   const triggeredLines = collectAnswerTriggeredLines(answers).slice(0, 2);

@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, ImageIcon, ShieldCheck, AlertCircle } from "lucide-react";
+import { Camera, Upload, RefreshCw, ImageIcon, ShieldCheck, AlertCircle, AlertTriangle, User } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
@@ -27,6 +27,8 @@ export function PhotoUploadStep() {
   const [dragging, setDragging] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [streaming, setStreaming] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{ w: number; h: number } | null>(null);
+  const [headshotLikely, setHeadshotLikely] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -47,6 +49,21 @@ export function PhotoUploadStep() {
       try {
         const dataUrl = await fileToDataUrl(file);
         setPersonImage(dataUrl);
+        // Check dimensions for headshot heuristic.
+        const img = new Image();
+        img.onload = () => {
+          setImageDimensions({ w: img.width, h: img.height });
+          // A half-body / full-body photo is typically taller than wide
+          // (aspect ratio < 0.9). A face-only headshot is roughly square
+          // (aspect ratio between 0.85 and 1.15).
+          const ratio = img.width / img.height;
+          setHeadshotLikely(ratio > 0.85 && ratio < 1.2);
+        };
+        img.onerror = () => {
+          setImageDimensions(null);
+          setHeadshotLikely(false);
+        };
+        img.src = dataUrl;
       } catch {
         setError(UI_COPY.photo.error.capture);
       }
@@ -117,6 +134,8 @@ export function PhotoUploadStep() {
   const clearPhoto = useCallback(() => {
     setPersonImage(null);
     setError(null);
+    setImageDimensions(null);
+    setHeadshotLikely(false);
   }, [setPersonImage]);
 
   return (
@@ -147,10 +166,25 @@ export function PhotoUploadStep() {
                   alt="Your uploaded photo"
                   className="aspect-[3/4] w-full object-cover"
                 />
-                <div className="absolute left-3 top-3 border border-warm-accent/60 bg-black/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-warm-accent backdrop-blur">
-                  Evidence accepted
-                </div>
+                {headshotLikely ? (
+                  <div className="absolute left-3 top-3 flex items-center gap-1.5 border border-[#ff3b30]/70 bg-[#ff3b30]/20 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[#ff5147] backdrop-blur">
+                    <AlertTriangle className="h-3 w-3" />
+                    Looks like a headshot
+                  </div>
+                ) : (
+                  <div className="absolute left-3 top-3 border border-warm-accent/60 bg-black/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-warm-accent backdrop-blur">
+                    Photo received
+                  </div>
+                )}
               </div>
+
+              {headshotLikely && (
+                <div className="max-w-sm rounded-md border border-[#ff3b30]/40 bg-[#ff3b30]/10 px-4 py-3 text-xs leading-relaxed text-[#ff5147]">
+                  <strong className="block mb-1 uppercase tracking-[0.16em]">Headshot warning</strong>
+                  This photo looks roughly square, which usually means it is a face-only shot. The try-on API needs to see your torso. You can still continue, but the result will likely be broken. Consider replacing with a half-body or full-body photo.
+                </div>
+              )}
+
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
@@ -284,6 +318,38 @@ export function PhotoUploadStep() {
                   <span>{error}</span>
                 </div>
               )}
+
+              {/* Photo suitability guide */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="border border-border bg-surface/60 p-3">
+                  <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-warm-accent">
+                    <User className="h-3.5 w-3.5" />
+                    {UI_COPY.photo.photoGuideTitle}
+                  </div>
+                  <ul className="flex flex-col gap-1">
+                    {UI_COPY.photo.photoGuide.map((g) => (
+                      <li
+                        key={g}
+                        className="flex items-start gap-2 text-xs leading-relaxed text-foreground/85"
+                      >
+                        <span className="mt-1.5 inline-block h-1 w-1 flex-shrink-0 rounded-full bg-warm-accent/70" />
+                        {g}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Headshot warning */}
+                <div className="border border-[#ff3b30]/40 bg-[#ff3b30]/5 p-3">
+                  <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#ff5147]">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Face-only photos will fail
+                  </div>
+                  <p className="text-xs leading-relaxed text-foreground/80">
+                    {UI_COPY.photo.headshotWarning}
+                  </p>
+                </div>
+              </div>
 
               <div className="mt-2 flex items-start gap-2 border border-border bg-surface/60 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-warm-accent" />

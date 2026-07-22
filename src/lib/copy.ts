@@ -165,6 +165,15 @@ export const UI_COPY = {
     retake: "Replace photo",
     continueCta: "Continue with this photo",
     back: "Back",
+    photoGuideTitle: "Photo requirements",
+    photoGuide: [
+      "Half-body (waist-up) or full-body",
+      "Standing, facing the camera",
+      "Arms visible, away from sides",
+      "Plain background, even lighting",
+    ],
+    headshotWarning:
+      "Headshots (face-only) do not work. The try-on API needs to see your torso so it can place the garment on your body. A face-only photo will produce a broken result.",
     error: {
       type: "Unsupported file type. Use JPG, PNG, or WebP.",
       size: "File is too large. Keep it under 10 MB.",
@@ -204,6 +213,8 @@ export const UI_COPY = {
       "Finalizing result…",
     ],
     demoBanner: "DEMO MODE — PRE-GENERATED RESULT",
+    demoExplanation:
+      "Your photos were not sent to YouCam. This is a pre-generated result from an earlier real YouCam API call, shown so you can still try the rest of the flow.",
     fallbackBanner: "TRY-ON UNAVAILABLE — SIDE-BY-SIDE PREVIEW",
     continueCta: "Continue to the interrogation",
     retryCta: "Try again",

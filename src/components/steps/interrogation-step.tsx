@@ -96,32 +96,27 @@ export function InterrogationStep() {
                     key={opt.id}
                     type="button"
                     onClick={() => handleSelect(opt.score)}
-                    className={`group flex items-center justify-between gap-3 rounded-md border px-5 py-4 text-left transition-all ${
+                    className={`group flex items-center gap-4 rounded-md border px-5 py-4 text-left transition-all ${
                       selected
                         ? "border-warm-accent bg-warm-accent/10 ring-1 ring-warm-accent"
                         : "border-border bg-card hover:border-warm-accent/50 hover:bg-card/60"
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <span
-                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors ${
-                          selected
-                            ? "border-warm-accent bg-warm-accent text-white"
-                            : "border-muted-foreground/40 group-hover:border-warm-accent/60"
-                        }`}
-                      >
-                        {selected && <Check className="h-3.5 w-3.5" />}
-                      </span>
-                      <span
-                        className={`text-sm sm:text-base ${
-                          selected ? "font-semibold text-foreground" : "text-foreground/90"
-                        }`}
-                      >
-                        {opt.label}
-                      </span>
-                    </div>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      +{opt.score}
+                    <span
+                      className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        selected
+                          ? "border-warm-accent bg-warm-accent text-white"
+                          : "border-muted-foreground/40 group-hover:border-warm-accent/60"
+                      }`}
+                    >
+                      {selected && <Check className="h-3.5 w-3.5" />}
+                    </span>
+                    <span
+                      className={`text-sm sm:text-base ${
+                        selected ? "font-semibold text-foreground" : "text-foreground/90"
+                      }`}
+                    >
+                      {opt.label}
                     </span>
                   </button>
                 );

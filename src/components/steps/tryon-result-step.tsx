@@ -236,8 +236,13 @@ export function TryOnResultStep() {
           >
             {/* Banner */}
             {showDemo && (
-              <div className="flex items-center justify-center border border-warm-accent/60 bg-warm-accent/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-warm-accent">
-                {UI_COPY.tryon.demoBanner}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-center border border-warm-accent/60 bg-warm-accent/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-warm-accent">
+                  {UI_COPY.tryon.demoBanner}
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {UI_COPY.tryon.demoExplanation}
+                </p>
               </div>
             )}
             {showFallback && (

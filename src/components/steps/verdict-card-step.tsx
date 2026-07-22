@@ -9,6 +9,8 @@ import { useFlowStore } from "@/lib/store";
 import { formatVerdictForClipboard } from "@/lib/verdict-engine";
 import { useToast } from "@/hooks/use-toast";
 
+type Phase = "score_animating" | "revealing_evidence" | "revealing_roast" | "showing_note";
+
 export function VerdictCardStep() {
   const setStep = useFlowStore((s) => s.setStep);
   const reset = useFlowStore((s) => s.reset);
@@ -17,58 +19,79 @@ export function VerdictCardStep() {
   const { toast } = useToast();
 
   const [displayScore, setDisplayScore] = useState(0);
+  const [phase, setPhase] = useState<Phase>("score_animating");
   const [revealedEvidence, setRevealedEvidence] = useState(0);
   const [revealedRoast, setRevealedRoast] = useState(0);
-  const [showNote, setShowNote] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Animate score counting up to the final value.
+  // Only when the count reaches the target do we transition to the next phase.
   useEffect(() => {
     if (!verdict) return;
     const target = verdict.totalScore;
-    let current = 0;
+    // For score 0, skip the count-up and go straight to done.
+    if (target === 0) {
+      const t1 = setTimeout(() => setDisplayScore(0), 0);
+      const t2 = setTimeout(() => setPhase("revealing_evidence"), 400);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
     const step = Math.max(1, Math.ceil(target / 12));
     const interval = setInterval(() => {
-      current = Math.min(target, current + step);
-      setDisplayScore(current);
-      if (current >= target) clearInterval(interval);
+      setDisplayScore((prev) => {
+        const next = Math.min(target, prev + step);
+        if (next >= target) {
+          clearInterval(interval);
+          // Wait a beat after the count-up finishes, then reveal verdict.
+          setTimeout(() => setPhase("revealing_evidence"), 450);
+        }
+        return next;
+      });
     }, 90);
     return () => clearInterval(interval);
   }, [verdict]);
 
-  // Stagger evidence reveal.
+  // Stagger evidence reveal — only after score animation completes.
   useEffect(() => {
-    if (!verdict) return;
+    if (phase !== "revealing_evidence" || !verdict) return;
+    if (verdict.evidence.length === 0) {
+      const t = setTimeout(() => setPhase("revealing_roast"), 0);
+      return () => clearTimeout(t);
+    }
     let i = 0;
     const interval = setInterval(() => {
       i += 1;
       setRevealedEvidence(i);
-      if (i >= verdict.evidence.length) clearInterval(interval);
+      if (i >= verdict.evidence.length) {
+        clearInterval(interval);
+        setTimeout(() => setPhase("revealing_roast"), 500);
+      }
     }, 450);
     return () => clearInterval(interval);
-  }, [verdict]);
+  }, [phase, verdict]);
 
   // Stagger roast lines reveal.
   useEffect(() => {
-    if (!verdict) return;
+    if (phase !== "revealing_roast" || !verdict) return;
+    if (verdict.roastLines.length === 0) {
+      const t = setTimeout(() => setPhase("showing_note"), 0);
+      return () => clearTimeout(t);
+    }
     let i = 0;
     const interval = setInterval(() => {
       i += 1;
       setRevealedRoast(i);
-      if (i >= verdict.roastLines.length) clearInterval(interval);
+      if (i >= verdict.roastLines.length) {
+        clearInterval(interval);
+        setTimeout(() => setPhase("showing_note"), 500);
+      }
     }, 550);
     return () => clearInterval(interval);
-  }, [verdict]);
-
-  // Constructive note appears last.
-  useEffect(() => {
-    if (!verdict) return;
-    const timeout = setTimeout(() => setShowNote(true), 1800);
-    return () => clearTimeout(timeout);
-  }, [verdict]);
+  }, [phase, verdict]);
 
   if (!verdict) {
-    // Defensive fallback: if user lands here without a verdict, send them back.
     return (
       <div className="flex min-h-[100svh] items-center justify-center px-5">
         <button
@@ -83,6 +106,9 @@ export function VerdictCardStep() {
   }
 
   const { verdict: v } = verdict;
+  const scoreDone = phase !== "score_animating";
+  const evidenceDone = phase === "revealing_roast" || phase === "showing_note";
+  const roastDone = phase === "showing_note";
 
   const handleCopy = async () => {
     const text = formatVerdictForClipboard(verdict, garment);
@@ -137,100 +163,135 @@ export function VerdictCardStep() {
           </span>
         </div>
 
-        {/* Stamp */}
-        <motion.div
-          initial={{ scale: 0.4, rotate: -25, opacity: 0 }}
-          animate={{ scale: 1, rotate: -6, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.4 }}
-          className="mt-8 flex justify-center"
-        >
-          <div
-            className="verdict-stamp text-2xl font-bold sm:text-3xl"
-            style={{ color: v.color }}
-          >
-            {v.stamp}
-          </div>
-        </motion.div>
+        {/* Stamp — only reveal after score animation completes */}
+        <AnimatePresence>
+          {scoreDone && (
+            <motion.div
+              initial={{ scale: 0.4, rotate: -25, opacity: 0 }}
+              animate={{ scale: 1, rotate: -6, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 14 }}
+              className="mt-8 flex justify-center"
+            >
+              <div
+                className="verdict-stamp text-2xl font-bold sm:text-3xl"
+                style={{ color: v.color }}
+              >
+                {v.stamp}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-          {v.meaning}
-        </p>
+        {/* Subtitle — only after stamp appears */}
+        <AnimatePresence>
+          {scoreDone && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground"
+            >
+              {v.meaning}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </motion.section>
 
-      {/* Why this verdict */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mt-6 border border-border bg-card/40 p-5"
-      >
-        <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.18em] text-foreground">
-          {UI_COPY.verdict.whyHeading}
-        </h3>
-        <ul className="flex flex-col gap-3">
-          <AnimatePresence>
-            {verdict.evidence.slice(0, revealedEvidence).map((e, idx) => (
-              <motion.li
-                key={e.questionId}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35 }}
-                className="flex gap-3"
-              >
-                <span className="font-mono text-xs text-warm-accent">
-                  {UI_COPY.verdict.evidenceBullet(idx + 1)}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm leading-relaxed text-foreground">
-                    {e.rationale}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    <span className="text-foreground/80">Q:</span> {e.questionPrompt}
-                    <br />
-                    <span className="text-foreground/80">A:</span> {e.answerLabel}
-                    <span className="ml-2 font-mono text-warm-accent">+{e.score}</span>
-                  </p>
-                </div>
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ul>
-      </motion.section>
-
-      {/* Roast lines */}
-      {verdict.roastLines.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
-          className="mt-4 border border-border bg-surface/60 p-5"
-        >
-          <h3 className="mb-4 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.18em] text-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-warm-accent" />
-            {UI_COPY.verdict.roastHeading}
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {verdict.roastLines.slice(0, revealedRoast).map((line, idx) => (
-              <motion.li
-                key={idx}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="border-l-2 border-warm-accent/60 pl-3 text-sm italic leading-relaxed text-foreground/90"
-              >
-                {line}
-              </motion.li>
-            ))}
-          </ul>
-        </motion.section>
-      )}
-
-      {/* Constructive note */}
+      {/* Why this verdict — only after score animation completes */}
       <AnimatePresence>
-        {showNote && (
+        {scoreDone && (
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="mt-6 border border-border bg-card/40 p-5"
+          >
+            <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.18em] text-foreground">
+              {UI_COPY.verdict.whyHeading}
+            </h3>
+            {verdict.evidence.length === 0 ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                None of your answers raised purchase-risk signals. Every
+                question checked out — you have a real occasion, no
+                duplicates, a price that fits your budget, manageable care,
+                and a plan you would not regret. This is rare.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                <AnimatePresence>
+                  {verdict.evidence.slice(0, revealedEvidence).map((e, idx) => (
+                    <motion.li
+                      key={e.questionId}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.35 }}
+                      className="flex gap-3"
+                    >
+                      <span className="font-mono text-xs text-warm-accent">
+                        {UI_COPY.verdict.evidenceBullet(idx + 1)}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm leading-relaxed text-foreground">
+                          {e.rationale}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          <span className="text-foreground/80">Q:</span> {e.questionPrompt}
+                          <br />
+                          <span className="text-foreground/80">A:</span> {e.answerLabel}
+                        </p>
+                      </div>
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+                {/* Filler while evidence is still revealing, only when none yet shown */}
+                {revealedEvidence === 0 && (
+                  <li className="text-xs text-muted-foreground/60">
+                    Reviewing your answers…
+                  </li>
+                )}
+              </ul>
+            )}
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Roast lines — only after evidence is done */}
+      <AnimatePresence>
+        {evidenceDone && verdict.roastLines.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="mt-4 border border-border bg-surface/60 p-5"
+          >
+            <h3 className="mb-4 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.18em] text-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-warm-accent" />
+              {UI_COPY.verdict.roastHeading}
+            </h3>
+            <ul className="flex flex-col gap-3">
+              {verdict.roastLines.slice(0, revealedRoast).map((line, idx) => (
+                <motion.li
+                  key={idx}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="border-l-2 border-warm-accent/60 pl-3 text-sm italic leading-relaxed text-foreground/90"
+                >
+                  {line}
+                </motion.li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Constructive note — only after roast is done */}
+      <AnimatePresence>
+        {roastDone && (
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className="mt-4 border border-warm-accent/40 bg-warm-accent/5 p-5"
           >
             <h3 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.18em] text-warm-accent">
@@ -243,34 +304,38 @@ export function VerdictCardStep() {
         )}
       </AnimatePresence>
 
-      {/* Actions */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.0 }}
-        className="mt-6 flex flex-col gap-2 sm:flex-row"
-      >
-        <button
-          type="button"
-          onClick={handleRestart}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          {UI_COPY.verdict.restartCta}
-        </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-warm-accent" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-          {UI_COPY.verdict.copyCta}
-        </button>
-      </motion.div>
+      {/* Actions — only after the constructive note */}
+      <AnimatePresence>
+        {roastDone && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="mt-6 flex flex-col gap-2 sm:flex-row"
+          >
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {UI_COPY.verdict.restartCta}
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-warm-accent" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {UI_COPY.verdict.copyCta}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Watermark */}
       <footer className="mt-auto pt-10">
