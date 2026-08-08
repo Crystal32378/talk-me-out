@@ -363,7 +363,7 @@ export function TryOnResultStep() {
                       {garment.name}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                      ${garment.price} · {garment.type}
+                      {garment.type}
                     </div>
                     <div className="mt-2 text-xs leading-relaxed text-muted-foreground">
                       <div>

@@ -1,16 +1,19 @@
 import type { Garment, GarmentCategory } from "./types";
 
 /**
- * Six default garments covering the distinct purchase-risk categories
- * defined in the product brief.
+ * Crystal's Closet — six default garments for the final YouCam hackathon
+ * submission.
  *
- * Each garment ships with: name, price, material, care instructions,
- * garment type, clean product image, and two roast lines tied to its
- * purchase-risk category.
+ * Sample garment photographs are original photos supplied by the project
+ * creator from her personal pre-owned wardrobe. They are NOT retailer
+ * products, are not currently for sale, and there is no brand partnership.
+ * Brand labels visible in the original photos have been masked in the
+ * copies committed to this repo; the creator's originals are not modified.
  *
- * Images are SVG-rendered silhouettes on a clean white background so the
- * MVP can run without external assets. They can be swapped for real
- * product photos before the final YouCam API demonstration.
+ * Each garment entry ships with: descriptive name, garment type, a
+ * purchase-risk category, an attribution tag, a clean product photo in
+ * /public/garments/, and two roast lines tied to its purchase-risk
+ * category. There are intentionally no prices — this is not a shop.
  */
 
 export const GARMENT_CATEGORIES: Record<
@@ -43,112 +46,120 @@ export const GARMENT_CATEGORIES: Record<
   },
 };
 
+/**
+ * Attribution line shown in the UI. Lighter than the README's full
+ * provenance sentence, but still honest about where the photos come from.
+ */
+export const GARMENT_COLLECTION_NAME = "Crystal’s Closet";
+export const GARMENT_ATTRIBUTION_LINE = "From the creator’s pre-owned wardrobe";
+
 export const DEFAULT_GARMENTS: Garment[] = [
   {
-    id: "sequin-party-dress",
-    name: "Midnight Sequin Mini Dress",
-    price: 248,
+    id: "yellow-floral-dress",
+    name: "Yellow Floral Dress",
+    // Price intentionally omitted — this is not a shop.
+    price: 0,
     currency: "USD",
-    material: "95% Polyester, 5% Spandex; sequin overlay",
-    care: "Hand wash cold inside out. Lay flat to dry. Do not iron sequins.",
+    material: "Lightweight woven floral print; sleeveless cold-shoulder cut",
+    care: "Machine wash cold, hang to dry.",
     type: "Dress",
     category: "unclear-occasion",
     categoryLabel: GARMENT_CATEGORIES["unclear-occasion"].label,
     purchaseTension: GARMENT_CATEGORIES["unclear-occasion"].tension,
-    imageUrl: "/garments/sequin-dress.jpg",
+    imageUrl: "/garments/yellow-floral-dress.jpg",
     roastLines: [
-      "Owning a sequin dress is not the same as having somewhere to wear it.",
-      "Your closet already has one of these waiting for an invitation that never arrives.",
+      "A floral dress without a named occasion tends to become closet wallpaper.",
+      "Pretty is a feeling. An event is a reason.",
     ],
     isDefault: true,
   },
   {
-    id: "minimal-beige-coat",
-    name: "Architectural Beige Wool Coat",
-    price: 890,
+    id: "black-white-check-dress",
+    name: "Black & White Check Dress",
+    price: 0,
     currency: "USD",
-    material: "70% Virgin wool, 30% Cashmere; cupro lining",
-    care: "Dry clean only. Store on a padded hanger. Air out between wears.",
+    material: "Cotton-blend gingham check; babydoll silhouette",
+    care: "Machine wash cold inside out. Tumble dry low.",
+    type: "Dress",
+    category: "unclear-occasion",
+    categoryLabel: GARMENT_CATEGORIES["unclear-occasion"].label,
+    purchaseTension: GARMENT_CATEGORIES["unclear-occasion"].tension,
+    imageUrl: "/garments/black-white-check-dress.jpg",
+    roastLines: [
+      "A check dress is a mood, not a plan.",
+      "If you already own one like it, the closet has already voted.",
+    ],
+    isDefault: true,
+  },
+  {
+    id: "lavender-maxi-dress",
+    name: "Lavender Maxi Dress",
+    price: 0,
+    currency: "USD",
+    material: "Soft woven tiered maxi; spaghetti straps, V-neck",
+    care: "Hand wash or gentle cycle. Hang to dry.",
+    type: "Dress",
+    category: "one-time-scenario",
+    categoryLabel: GARMENT_CATEGORIES["one-time-scenario"].label,
+    purchaseTension: GARMENT_CATEGORIES["one-time-scenario"].tension,
+    imageUrl: "/garments/lavender-maxi-dress.jpg",
+    roastLines: [
+      "A maxi dress for one event is a long-term storage commitment.",
+      "Tiered fabric photographs beautifully and folds reluctantly.",
+    ],
+    isDefault: true,
+  },
+  {
+    id: "black-white-lace-top",
+    name: "Black & White Lace Top",
+    price: 0,
+    currency: "USD",
+    material: "Cotton-blend lace overlay; crew neck, sleeveless",
+    care: "Hand wash cold. Lay flat to dry. Do not wring.",
+    type: "Top",
+    category: "high-maintenance",
+    categoryLabel: GARMENT_CATEGORIES["high-maintenance"].label,
+    purchaseTension: GARMENT_CATEGORIES["high-maintenance"].tension,
+    imageUrl: "/garments/black-white-lace-top.jpg",
+    roastLines: [
+      "Lace is a relationship. It asks for hand-washing and patience.",
+      "The photograph loves it. Your laundry routine has not been consulted.",
+    ],
+    isDefault: true,
+  },
+  {
+    id: "black-structured-dress",
+    name: "Black Structured Dress",
+    price: 0,
+    currency: "USD",
+    material: "Structured woven fabric; notched lapel, puff sleeve, side-tie",
+    care: "Dry clean recommended. Steam to refresh.",
+    type: "Dress",
+    category: "false-investment",
+    categoryLabel: GARMENT_CATEGORIES["false-investment"].label,
+    purchaseTension: GARMENT_CATEGORIES["false-investment"].tension,
+    imageUrl: "/garments/black-structured-dress.jpg",
+    roastLines: [
+      "Calling a black dress 'timeless' does not mean it will get worn.",
+      "Structure adds presence. It also adds dry-cleaning.",
+    ],
+    isDefault: true,
+  },
+  {
+    id: "vintage-beige-trench",
+    name: "Vintage Beige Trench Coat",
+    price: 0,
+    currency: "USD",
+    material: "Cotton-twill trench; notched lapel, belted waist, long sleeve",
+    care: "Dry clean only. Air out between wears. Store on a wide hanger.",
     type: "Outerwear",
     category: "false-investment",
     categoryLabel: GARMENT_CATEGORIES["false-investment"].label,
     purchaseTension: GARMENT_CATEGORIES["false-investment"].tension,
-    imageUrl: "/garments/beige-coat.jpg",
+    imageUrl: "/garments/vintage-beige-trench.jpg",
     roastLines: [
-      "Calling it an 'investment piece' does not make it appreciate in value.",
-      "A coat at this price should outlive three trends and at least one apartment.",
-    ],
-    isDefault: true,
-  },
-  {
-    id: "running-jacket",
-    name: "Pro Trail Running Jacket",
-    price: 320,
-    currency: "USD",
-    material: "Recycled nylon ripstop with DWR finish",
-    care: "Machine wash cold, no fabric softener. Tumble dry low. Reapply DWR annually.",
-    type: "Outerwear",
-    category: "aspirational-identity",
-    categoryLabel: GARMENT_CATEGORIES["aspirational-identity"].label,
-    purchaseTension: GARMENT_CATEGORIES["aspirational-identity"].tension,
-    imageUrl: "/garments/running-jacket.jpg",
-    roastLines: [
-      "Buying the jacket does not install the habit of running.",
-      "Aspirational outerwear has funded more gyms than it has visited.",
-    ],
-    isDefault: true,
-  },
-  {
-    id: "designer-collab-tee",
-    name: "Designer Collaboration Logo Tee",
-    price: 195,
-    currency: "USD",
-    material: "100% organic combed cotton, 240 GSM",
-    care: "Machine wash cold inside out. Tumble dry low. Do not bleach print.",
-    type: "Top",
-    category: "brand-premium",
-    categoryLabel: GARMENT_CATEGORIES["brand-premium"].label,
-    purchaseTension: GARMENT_CATEGORIES["brand-premium"].tension,
-    imageUrl: "/garments/designer-tee.jpg",
-    roastLines: [
-      "You are wearing a press release.",
-      "A logo is not a personality, even at this price.",
-    ],
-    isDefault: true,
-  },
-  {
-    id: "interview-blazer",
-    name: "Crisp Charcoal Interview Blazer",
-    price: 285,
-    currency: "USD",
-    material: "Italian stretch wool blend; viscose lining",
-    care: "Dry clean only. Steam to refresh. Store with shoulders supported.",
-    type: "Outerwear",
-    category: "one-time-scenario",
-    categoryLabel: GARMENT_CATEGORIES["one-time-scenario"].label,
-    purchaseTension: GARMENT_CATEGORIES["one-time-scenario"].tension,
-    imageUrl: "/garments/blazer.jpg",
-    roastLines: [
-      "The interview is one day. The blazer is forever — in the back of your closet.",
-      "Buying confidence for a single morning is a bold pricing strategy.",
-    ],
-    isDefault: true,
-  },
-  {
-    id: "cashmere-wrap",
-    name: "Featherweight Cashmere Wrap",
-    price: 410,
-    currency: "USD",
-    material: "100% Grade-A Mongolian cashmere, 2-ply",
-    care: "Hand wash with cashmere shampoo or dry clean. Fold, do not hang.",
-    type: "Outerwear",
-    category: "high-maintenance",
-    categoryLabel: GARMENT_CATEGORIES["high-maintenance"].label,
-    purchaseTension: GARMENT_CATEGORIES["high-maintenance"].tension,
-    imageUrl: "/garments/cashmere-wrap.jpg",
-    roastLines: [
-      "You like the photograph. You have not yet agreed to the maintenance contract.",
-      "Cashmere asks for patience, soap, and storage you do not currently own.",
+      "A trench coat is the most photographed coat you will own and the most forgotten.",
+      "Vintage means character — and a dry-cleaning relationship.",
     ],
     isDefault: true,
   },

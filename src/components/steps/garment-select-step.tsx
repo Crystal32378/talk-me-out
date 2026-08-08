@@ -6,7 +6,7 @@ import { Check, Upload, AlertCircle, Tag } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
-import { DEFAULT_GARMENTS } from "@/lib/garments";
+import { DEFAULT_GARMENTS, GARMENT_COLLECTION_NAME, GARMENT_ATTRIBUTION_LINE } from "@/lib/garments";
 import type { CustomGarmentInput, GarmentType } from "@/lib/types";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -85,6 +85,16 @@ export function GarmentSelectStep() {
         backLabel={UI_COPY.garment.back}
       />
 
+      {/* Collection attribution */}
+      <div className="mb-6 flex flex-col gap-1 border-l-2 border-warm-accent/60 pl-3">
+        <div className="font-display text-sm font-semibold tracking-tight text-foreground">
+          {GARMENT_COLLECTION_NAME}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {GARMENT_ATTRIBUTION_LINE}
+        </div>
+      </div>
+
       {/* Tab switch */}
       <div className="mb-6 inline-flex w-full max-w-md gap-1 rounded-md border border-border bg-card p-1">
         <button
@@ -156,9 +166,8 @@ export function GarmentSelectStep() {
                         <div className="font-display text-sm font-semibold leading-tight text-foreground">
                           {g.name}
                         </div>
-                        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>${g.price}</span>
-                          <span>{g.type}</span>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {g.type}
                         </div>
                       </div>
                     </button>
@@ -177,7 +186,7 @@ export function GarmentSelectStep() {
                       {UI_COPY.garment.selected}
                     </div>
                     <div className="font-display text-base font-semibold text-foreground">
-                      {garment.name} · ${garment.price}
+                      {garment.name}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground">
                       {garment.material} · {garment.care}

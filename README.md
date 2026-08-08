@@ -17,10 +17,18 @@ The product is **not anti-shopping**. It is **anti-impulse shopping**. The syste
 ### The five-step flow
 
 1. **Upload a photo** — full-body or half-body, camera or file upload.
-2. **Pick a garment** — six default garments covering distinct purchase-risk categories, or upload your own.
-3. **Virtual try-on** — YouCam Apparel VTO generates a composite. Falls back to a clearly-labeled demo or side-by-side preview if the API is unavailable.
+2. **Pick a garment** — six garments from **Crystal's Closet** (the creator's pre-owned wardrobe) covering distinct purchase-risk categories, or upload your own.
+3. **Virtual try-on** — YouCam Apparel VTO generates a composite. Falls back to a clearly-labeled pre-generated demo result if the API is unavailable.
 4. **Five honest questions** — occasion, duplication, budget, care, regret.
 5. **Verdict card** — one of four explainable verdicts with score, evidence, roast lines, and a constructive closing note.
+
+### Crystal's Closet — sample garment provenance
+
+The six default garments in this submission are **Crystal's Closet** — original photographs taken by the project creator of clothing from her own pre-owned wardrobe.
+
+> Sample garment photographs are original photos supplied by the project creator from her personal pre-owned wardrobe.
+
+These are not retailer products, are not currently for sale, and there is no brand partnership. Where the original photos showed a brand label, the label has been masked in the cleaned copies committed to this repo. The creator's original photos are not modified. The UI uses the lighter attribution line **"From the creator's pre-owned wardrobe"** and intentionally shows no prices — this is a demo collection, not a shop.
 
 ### The four verdicts
 
@@ -152,7 +160,7 @@ garment:     <File>    # JPG/PNG/WebP
 garmentType: <string>  # "Top" | "Outerwear" | "Dress" | "Bottom" | "Unsure"
 ```
 
-The route normalizes both images to JPEG (via Sharp) before sending to YouCam, because YouCam's `/file/cloth` endpoint accepts only `image/jpeg` or `image/png`.
+The route normalizes both images to JPEG (via Sharp) before sending to YouCam, because YouCam's `/file/cloth` endpoint accepts only `image/jpeg` or `image/png`. The client also sends a `garmentName` field for logging, but the server does not currently consume it.
 
 ### Garment type mapping
 
@@ -182,11 +190,13 @@ The app supports three clearly-labeled states on the try-on result page:
 |------|-------------|--------------|-------------------|
 | **Real API** | `● REAL YOUCAM API RESULT` | Green `#30D158` | `YOUCAM_API_KEY` set + API call succeeded |
 | **Demo mode** | `DEMO MODE — PRE-GENERATED RESULT` | Orange `#FF6B35` | No API key, OR API call failed (fallback) |
-| **Side-by-side** | `TRY-ON UNAVAILABLE — SIDE-BY-SIDE PREVIEW` | Red `#FF3B30` | Even demo compositing failed |
+| **Side-by-side** | `TRY-ON UNAVAILABLE — SIDE-BY-SIDE PREVIEW` | Red `#FF3B30` | Even the pre-generated demo image could not be loaded |
 
-**Demo mode** composites the garment over the person photo using Sharp and labels the result clearly. It exists so the rest of the flow (questions, verdict) can run without an API key — useful for development, demos, and the hackathon fallback path.
+**Demo mode** does **not** composite the user's garment over the user's person photo. Instead, it serves a **pre-generated real YouCam try-on result** stored at `public/demo/fallback-result.jpg`. That image was produced by an earlier, successful real YouCam Apparel VTO call (person photo + beige wool coat → AI-generated try-on composite). When demo mode is triggered, the route reads that pre-generated image, overlays a clear `DEMO MODE — PRE-GENERATED RESULT` label across the bottom via Sharp, and returns the data URL. The UI explains that the user's uploaded photos were **not** sent to YouCam and that this is a pre-generated demonstration result. This is more honest and visually correct than the previous approach of compositing the garment over the user's face.
 
-The final hackathon submission must demonstrate real YouCam API integration, which is verified in the P0 report (`download/P0-YouCam-API-驗證報告.md`).
+The pre-generated result trio (`fallback-person.jpg`, `fallback-garment.jpg`, `fallback-result.jpg`) is shipped in `public/demo/` so reviewers can verify the trio matches.
+
+The final hackathon submission must demonstrate real YouCam API integration, which is verified in the P0 report (`download/P0-YouCam-API-驗證報告.md`) and the six-garment VTO test outputs in `download/vto-test-*.jpg`.
 
 ---
 
@@ -263,7 +273,7 @@ src/
 │   └── ui/                     # shadcn/ui primitives
 └── lib/
     ├── types.ts                # Domain types
-    ├── garments.ts             # 6 default garments
+    ├── garments.ts             # Crystal's Closet — 6 default garments + attribution
     ├── questions.ts            # 5 questions, scoring matrix
     ├── copy.ts                 # English copy library + UI strings
     ├── verdicts.ts             # Verdict definitions + thresholds
@@ -272,22 +282,25 @@ src/
     └── youcam-client.ts        # Live-verified YouCam API typed client
 
 scripts/
-├── test-youcam-api.ts          # P0 verification script (real API test)
+├── test-youcam-api.ts          # P0 verification script (real API test, single garment)
+├── test-crystal-closet-vto.ts  # Final-submission VTO test — runs all 6 Crystal's Closet garments
 ├── probe-youcam.ts             # Diagnostic script for API field discovery
-├── make-sample-person.ts       # Generate placeholder person photo
-└── render-garment-jpgs.ts      # Render garment SVGs to JPGs
+└── make-sample-person.ts       # Generate placeholder person photo
 
 public/
-├── garments/                   # 6 garment images (SVG + JPG)
+├── garments/                   # 6 Crystal's Closet garment JPGs (600x800, labels masked)
 ├── sample-person.jpg           # Placeholder person photo (silhouette)
-└── sample-person-real.jpg      # AI-generated realistic person photo (for testing)
+├── sample-person-real.jpg      # AI-generated realistic person photo (P0 testing)
+└── sample-person-crystal.jpg   # Creator-supplied full-body person photo (Crystal's Closet testing)
 
 download/                       # Verification evidence (committed)
 ├── P0-YouCam-API-驗證報告.md   # P0 verification report (secrets removed)
-├── youcam-real-result.jpg      # Real YouCam API result image
-├── youcam-real-side-by-side.jpg # Side-by-side: input person + garment + result
+├── youcam-real-result.jpg      # Real YouCam API result image (P0 test)
+├── youcam-real-side-by-side.jpg # Side-by-side: input person + garment + result (P0 test)
 ├── 04-tryon-REAL-youcam-api.png # UI screenshot with green "Real YouCam API Result" banner
-└── 06-verdict-REAL-api.png     # Full flow verdict card screenshot
+├── 06-verdict-REAL-api.png     # Full flow verdict card screenshot
+├── vto-test-<slug>.jpg         # 6 real-VTO result images for Crystal's Closet (final submission)
+└── vto-test-summary.json       # Machine-readable summary of the 6-garment VTO test
 ```
 
 ---
@@ -298,9 +311,9 @@ download/                       # Verification evidence (committed)
 
 1. Open the app.
 2. Click **Begin the interrogation**.
-3. Upload `public/sample-person-real.jpg` (or your own photo).
-4. Pick one of the six default garments (or upload your own).
-5. Wait for the try-on composite (real API if key is set, demo mode otherwise).
+3. Upload `public/sample-person-crystal.jpg` (or your own photo).
+4. Pick one of the six Crystal's Closet garments (or upload your own).
+5. Wait for the try-on result (real API if key is set, pre-generated demo otherwise).
 6. Answer the five questions.
 7. Read your verdict.
 8. Click **Copy verdict** or **Interrogate another purchase**.
@@ -309,11 +322,16 @@ download/                       # Verification evidence (committed)
 
 ```bash
 # 1. Set YOUCAM_API_KEY in .env.local
-# 2. Run the verification script
+# 2. Run the single-garment verification script
 bun run scripts/test-youcam-api.ts
+
+# Or: run all 6 Crystal's Closet garments in one pass
+bun run scripts/test-crystal-closet-vto.ts
 ```
 
-The script runs the full YouCam flow with real images and prints HTTP status, elapsed time, and response shape. The result image is saved to `download/youcam-real-result.jpg`.
+`test-youcam-api.ts` runs the full YouCam flow with a single garment (vintage-beige-trench) and saves the result image to `download/youcam-real-result.jpg`.
+
+`test-crystal-closet-vto.ts` runs all six Crystal's Closet garments through the real YouCam API using `public/sample-person-crystal.jpg`, saves each result to `download/vto-test-<slug>.jpg`, and writes a machine-readable summary to `download/vto-test-summary.json`. Supports `--only <slug>` for single-garment re-runs.
 
 ### Verdict path testing
 

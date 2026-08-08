@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "yellow-floral-dress",
+    "name": "Yellow Floral Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 12176,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-yellow-floral-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "black-white-check-dress",
+    "name": "Black & White Check Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 8413,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-check-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "lavender-maxi-dress",
+    "name": "Lavender Maxi Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 10934,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-lavender-maxi-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "black-white-lace-top",
+    "name": "Black & White Lace Top",
+    "type": "Top",
+    "category": "upper_body",
+    "status": "success",
+    "elapsedMs": 11006,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-lace-top.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "black-structured-dress",
+    "name": "Black Structured Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 10908,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-black-structured-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "vintage-beige-trench",
+    "name": "Vintage Beige Trench Coat",
+    "type": "Outerwear",
+    "category": "upper_body",
+    "status": "success",
+    "elapsedMs": 10953,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-vintage-beige-trench.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  }
+]

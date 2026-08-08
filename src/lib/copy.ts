@@ -182,7 +182,7 @@ export const UI_COPY = {
   },
   garment: {
     heading: "Pick your suspect.",
-    body: "Six default garments cover the most common purchase-risk patterns. You can also upload your own.",
+    body: "Six garments from the creator's pre-owned wardrobe cover the most common purchase-risk patterns. You can also upload your own.",
     defaultTab: "Lineup",
     customTab: "Upload your own",
     selectCta: "Select this garment",
@@ -192,7 +192,7 @@ export const UI_COPY = {
     custom: {
       imageCta: "Upload garment image",
       nameLabel: "Garment name",
-      priceLabel: "Price (USD)",
+      priceLabel: "Price (USD, optional)",
       careLabel: "Care method",
       typeLabel: "Garment type",
       typeOptions: ["Top", "Outerwear", "Dress", "Bottom", "Unsure"],
