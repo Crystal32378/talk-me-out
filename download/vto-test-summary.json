@@ -7,11 +7,12 @@
     "status": "success",
     "elapsedMs": 12968,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-yellow-floral-dress.jpg",
+    "outputImage": "download/vto-test-yellow-floral-dress.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
     "slug": "black-white-check-dress",
@@ -21,11 +22,12 @@
     "status": "success",
     "elapsedMs": 11047,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-check-dress.jpg",
+    "outputImage": "download/vto-test-black-white-check-dress.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
     "slug": "lavender-maxi-dress",
@@ -35,11 +37,12 @@
     "status": "success",
     "elapsedMs": 8380,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-lavender-maxi-dress.jpg",
+    "outputImage": "download/vto-test-lavender-maxi-dress.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
     "slug": "black-white-lace-top",
@@ -49,11 +52,12 @@
     "status": "success",
     "elapsedMs": 11002,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-lace-top.jpg",
+    "outputImage": "download/vto-test-black-white-lace-top.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
     "slug": "black-floral-wrap-maxi-dress",
@@ -63,11 +67,12 @@
     "status": "success",
     "elapsedMs": 11071,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-black-floral-wrap-maxi-dress.jpg",
+    "outputImage": "download/vto-test-black-floral-wrap-maxi-dress.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
     "slug": "sage-utility-jacket",
@@ -77,21 +82,23 @@
     "status": "success",
     "elapsedMs": 10949,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-sage-utility-jacket.jpg",
+    "outputImage": "download/vto-test-sage-utility-jacket.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
-    "slug": "red-short-sleeve-dress",
-    "name": "Red Short-Sleeve Dress",
+    "slug": "navy-ruffle-dress",
+    "name": "Navy Ruffle Dress",
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 10875,
+    "elapsedMs": 13194,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-red-short-sleeve-dress.jpg",
+    "outputImage": "download/vto-test-navy-ruffle-dress.jpg",
+    "personImageSha256": "d6cde44243b050c47b97f350fdd0661a9a82962a7f0855da6f724f2368eed829",
     "rawKeys": [
       "status",
       "data"
@@ -105,21 +112,23 @@
     "status": "success",
     "elapsedMs": 11158,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-beige-linen-feel-dress.jpg",
+    "outputImage": "download/vto-test-beige-linen-feel-dress.jpg",
     "rawKeys": [
       "status",
       "data"
-    ]
+    ],
+    "personImageSha256": "3b439560f52aca23c14e59a7c04014fbb9b1b11cf515d6c9ba13d38a5bff7a2e"
   },
   {
-    "slug": "black-ruffle-mini-dress",
-    "name": "Black Ruffle Mini Dress",
+    "slug": "pink-illustrated-print-romper",
+    "name": "Pink Illustrated Print Romper",
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 10915,
+    "elapsedMs": 12329,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-black-ruffle-mini-dress.jpg",
+    "outputImage": "download/vto-test-pink-illustrated-print-romper.jpg",
+    "personImageSha256": "d6cde44243b050c47b97f350fdd0661a9a82962a7f0855da6f724f2368eed829",
     "rawKeys": [
       "status",
       "data"

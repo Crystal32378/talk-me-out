@@ -1,7 +1,7 @@
 /**
  * Crystal's Closet — multi-garment VTO test.
  *
- * Runs each of the six Crystal's Closet garments through the real YouCam
+ * Runs each of the nine Crystal's Closet garments through the real YouCam
  * Apparel VTO API using the Crystal person test photo, and saves each
  * result image to download/vto-test-<slug>.jpg for visual QA.
  *
@@ -25,6 +25,7 @@
 
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { createHash } from "crypto";
 import path from "path";
 import {
   getYouCamConfig,
@@ -74,6 +75,7 @@ interface PerGarmentResult {
   type: string;
   category: GarmentCategory;
   status: "success" | "failed";
+  personImageSha256: string;
   elapsedMs?: number;
   unitsUsed?: number | null;
   errorCode?: string;
@@ -85,6 +87,7 @@ interface PerGarmentResult {
 async function runOne(
   config: ReturnType<typeof getYouCamConfig> & {},
   personBuffer: Buffer,
+  personImageSha256: string,
   garment: GarmentSpec,
   outDir: string,
 ): Promise<PerGarmentResult> {
@@ -96,6 +99,7 @@ async function runOne(
       type: garment.type,
       category: mapGarmentTypeToCategory(garment.type),
       status: "failed",
+      personImageSha256,
       errorCode: "garment-file-missing",
       errorMessage: `Garment image not found: ${garmentPath}`,
     };
@@ -130,9 +134,10 @@ async function runOne(
       type: garment.type,
       category,
       status: "success",
+      personImageSha256,
       elapsedMs: elapsed,
       unitsUsed: result.unitsUsed ?? null,
-      outputImage: outPath,
+      outputImage: path.relative(process.cwd(), outPath),
       rawKeys: Object.keys(result.raw.raw),
     };
   } catch (err) {
@@ -145,6 +150,7 @@ async function runOne(
       type: garment.type,
       category,
       status: "failed",
+      personImageSha256,
       elapsedMs: elapsed,
       errorCode: code,
       errorMessage: message,
@@ -185,7 +191,11 @@ async function main() {
     process.exit(1);
   }
   const personBuffer = await readFile(personPath);
+  const personImageSha256 = createHash("sha256")
+    .update(personBuffer)
+    .digest("hex");
   console.log(`Person:      ${personPath} (${personBuffer.length} bytes)`);
+  console.log(`SHA-256:     ${personImageSha256}`);
   console.log("");
 
   const downloadDir = path.join(process.cwd(), "download");
@@ -194,7 +204,13 @@ async function main() {
   const results: PerGarmentResult[] = [];
   for (const g of garmentList) {
     console.log(`▶ ${g.name}  [${g.slug}]  type=${g.type}  category=${mapGarmentTypeToCategory(g.type)}`);
-    const r = await runOne(config, personBuffer, g, downloadDir);
+    const r = await runOne(
+      config,
+      personBuffer,
+      personImageSha256,
+      g,
+      downloadDir,
+    );
     results.push(r);
     if (r.status === "success") {
       console.log(`  ✅ SUCCESS in ${r.elapsedMs} ms — saved ${r.outputImage}`);
@@ -215,7 +231,7 @@ async function main() {
   console.log(`\n=== TALLY ===`);
   console.log(`Passed: ${passed} / ${results.length}`);
   console.log(`Failed: ${failed} / ${results.length}`);
-  process.exit(failed === 0 ? 0 : 0); // always exit 0 so the script result is inspectable
+  process.exit(failed === 0 ? 0 : 1);
 }
 
 main().catch((err) => {

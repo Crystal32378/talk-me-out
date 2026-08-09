@@ -23,6 +23,7 @@ export function PhotoUploadStep() {
   const setStep = useFlowStore((s) => s.setStep);
   const personImage = useFlowStore((s) => s.personImage);
   const setPersonImage = useFlowStore((s) => s.setPersonImage);
+  const savedResultsCount = useFlowStore((s) => s.savedResults.length);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -34,6 +35,11 @@ export function PhotoUploadStep() {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  const confirmPhotoReplacement = useCallback(() => {
+    if (!personImage || savedResultsCount === 0) return true;
+    return window.confirm(UI_COPY.photo.replaceClearsFittingRoom);
+  }, [personImage, savedResultsCount]);
 
   const handleFile = useCallback(
     async (file: File | undefined) => {
@@ -49,7 +55,8 @@ export function PhotoUploadStep() {
       }
       try {
         const dataUrl = await fileToDataUrl(file);
-        setPersonImage(dataUrl);
+        if (dataUrl !== personImage && !confirmPhotoReplacement()) return;
+        await setPersonImage(dataUrl);
         setShowUploader(false);
         // Check dimensions for headshot heuristic.
         const img = new Image();
@@ -70,7 +77,7 @@ export function PhotoUploadStep() {
         setError(UI_COPY.photo.error.capture);
       }
     },
-    [setPersonImage],
+    [confirmPhotoReplacement, personImage, setPersonImage],
   );
 
   const stopCamera = useCallback(() => {
@@ -104,7 +111,7 @@ export function PhotoUploadStep() {
     }
   }, []);
 
-  const captureFrame = useCallback(() => {
+  const captureFrame = useCallback(async () => {
     if (!videoRef.current) return;
     const video = videoRef.current;
     const canvas = document.createElement("canvas");
@@ -119,10 +126,11 @@ export function PhotoUploadStep() {
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    setPersonImage(dataUrl);
+    if (dataUrl !== personImage && !confirmPhotoReplacement()) return;
+    await setPersonImage(dataUrl);
     setShowUploader(false);
     stopCamera();
-  }, [setPersonImage, stopCamera]);
+  }, [confirmPhotoReplacement, personImage, setPersonImage, stopCamera]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -134,13 +142,14 @@ export function PhotoUploadStep() {
     [handleFile],
   );
 
-  const clearPhoto = useCallback(() => {
-    setPersonImage(null);
+  const clearPhoto = useCallback(async () => {
+    if (personImage && !confirmPhotoReplacement()) return;
+    await setPersonImage(null);
     setError(null);
     setImageDimensions(null);
     setHeadshotLikely(false);
     setShowUploader(true);
-  }, [setPersonImage]);
+  }, [confirmPhotoReplacement, personImage, setPersonImage]);
 
   return (
     <div className="mx-auto flex min-h-[100svh] max-w-3xl flex-col px-5 py-8">

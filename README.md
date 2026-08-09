@@ -83,7 +83,7 @@ Maximum impulse score: **19**.
 - **State:** Zustand
 - **Try-On API:** YouCam Apparel Virtual Try-On (proxied server-side)
 - **Image processing:** Sharp (for demo-mode compositing and image normalization)
-- **No database** in the MVP — personal photos are never persisted.
+- **No server-side database or account system** — the fitting photo and saved looks persist only in the user's browser via IndexedDB.
 
 ---
 
@@ -227,9 +227,10 @@ The final hackathon submission must demonstrate real YouCam API integration, whi
 
 ### Privacy
 
-- **Your fitting photo and saved try-on results stay on this device.** They are stored in IndexedDB (browser-local) and are not uploaded to any Talk Me Out of It account or cloud history. You can clear them at any time via **Clear Fitting Room**.
+- **Your fitting photo and saved try-on results are stored on this device.** They live in IndexedDB (browser-local) and are not uploaded to any Talk Me Out of It account or cloud history. You can clear them at any time via **Clear Fitting Room**.
 - Personal photos are sent to YouCam **only** for the active try-on request.
 - YouCam temporarily processes and stores uploads and generated results under its service terms. The server proxy downloads the result immediately and returns a compressed data URL to the browser, which is then persisted to IndexedDB so the same garment does not need to be re-tried.
+- Replacing or removing the fitting photo clears all saved looks before the new photo becomes active, preventing a cached VTO result from one person from appearing for another.
 - The Zustand store keeps the in-session state in memory; the persistent layer (person photo + saved looks) lives in IndexedDB.
 - `.env.local` (containing the API key) is gitignored and never committed.
 
@@ -316,7 +317,7 @@ public/
 ├── garments/                   # 9 Crystal's Closet garment JPGs (600x800, labels masked)
 ├── sample-person.jpg           # Placeholder person photo (silhouette)
 ├── sample-person-real.jpg      # AI-generated realistic person photo (P0 testing)
-└── sample-person-crystal.jpg   # Creator-supplied full-body person photo (Crystal's Closet testing)
+└── sample-person-crystal.jpg   # Creator-authorized demo photo with an AI-edited synthetic face
 
 download/                       # Verification evidence (committed)
 ├── P0-YouCam-API-驗證報告.md   # P0 verification report (secrets removed)
@@ -324,8 +325,8 @@ download/                       # Verification evidence (committed)
 ├── youcam-real-side-by-side.jpg # Side-by-side: input person + garment + result (P0 test)
 ├── 04-tryon-REAL-youcam-api.png # UI screenshot with green "Real YouCam API Result" banner
 ├── 06-verdict-REAL-api.png     # Full flow verdict card screenshot
-├── vto-test-<slug>.jpg         # 6 real-VTO result images for Crystal's Closet (final submission)
-└── vto-test-summary.json       # Machine-readable summary of the 6-garment VTO test
+├── vto-test-<slug>.jpg         # 9 real-VTO result images for the current Crystal's Closet lineup
+└── vto-test-summary.json       # Machine-readable summary of the 9-garment VTO test
 ```
 
 ---
@@ -356,7 +357,11 @@ bun run scripts/test-crystal-closet-vto.ts
 
 `test-youcam-api.ts` runs the full YouCam flow with a single garment (sage-utility-jacket) and saves the result image to `download/youcam-real-result.jpg`.
 
-`test-crystal-closet-vto.ts` runs all nine Crystal's Closet garments through the real YouCam API using `public/sample-person-crystal.jpg`, saves each result to `download/vto-test-<slug>.jpg`, and writes a machine-readable summary to `download/vto-test-summary.json`. Supports `--only <slug>` for single-garment re-runs.
+`test-crystal-closet-vto.ts` runs all nine Crystal's Closet garments through the real YouCam API using `public/sample-person-crystal.jpg`, saves each result to `download/vto-test-<slug>.jpg`, and writes a machine-readable summary to `download/vto-test-summary.json`. The summary includes the person image's SHA-256 fingerprint for each result. Supports `--only <slug>` for single-garment re-runs.
+
+The committed nine-result evidence set is intentionally explicit about photo provenance: seven retained outputs use an earlier creator-authorized demo-photo version, while the Navy and Pink gap-closing runs use the final AI-face demo photo now stored at `public/sample-person-crystal.jpg`. Each summary entry identifies the exact version by fingerprint.
+
+Additional `vto-test-*.jpg` files from superseded closet lineups remain in `download/` as historical evidence; only the nine entries in `vto-test-summary.json` represent the current lineup.
 
 ### Verdict path testing
 
