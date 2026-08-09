@@ -26,6 +26,7 @@ export function GarmentSelectStep() {
   const garment = useFlowStore((s) => s.garment);
   const selectDefaultGarment = useFlowStore((s) => s.selectDefaultGarment);
   const setCustomGarment = useFlowStore((s) => s.setCustomGarment);
+  const savedResults = useFlowStore((s) => s.savedResults);
 
   const [tab, setTab] = useState<"default" | "custom">("default");
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +86,22 @@ export function GarmentSelectStep() {
         backLabel={UI_COPY.garment.back}
       />
 
+      {/* My Fitting Room entry — visible whenever at least one look is saved */}
+      <div className="mb-6 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setStep("fitting-room")}
+          className="inline-flex items-center gap-2 rounded-md border border-warm-accent/60 bg-warm-accent/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-warm-accent transition-colors hover:bg-warm-accent/10"
+        >
+          {UI_COPY.garment.fittingRoomCta}
+          {savedResults.length > 0 && (
+            <span className="rounded-full bg-warm-accent/20 px-2 py-0.5 text-[10px] tracking-[0.14em]">
+              {savedResults.length} SAVED
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Collection attribution */}
       <div className="mb-6 flex flex-col gap-1 border-l-2 border-warm-accent/60 pl-3">
         <div className="font-display text-sm font-semibold tracking-tight text-foreground">
@@ -134,6 +151,7 @@ export function GarmentSelectStep() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {DEFAULT_GARMENTS.map((g) => {
                   const selected = garment?.id === g.id;
+                  const tried = savedResults.some((r) => r.id === g.id);
                   return (
                     <button
                       key={g.id}
@@ -156,6 +174,11 @@ export function GarmentSelectStep() {
                         {selected && (
                           <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-warm-accent text-white">
                             <Check className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {tried && (
+                          <div className="absolute left-2 top-2 border border-[#30d158]/60 bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#30d158] backdrop-blur">
+                            {UI_COPY.garment.triedBadge}
                           </div>
                         )}
                       </div>

@@ -4,18 +4,22 @@ import { create } from "zustand";
 import type {
   AnswerMap,
   CustomGarmentInput,
+  Decision,
+  FittingRoomEntry,
   Garment,
   Step,
   TryOnResult,
+  VerdictResult,
 } from "./types";
 import { DEFAULT_GARMENTS } from "./garments";
 import { QUESTIONS } from "./questions";
-import type { VerdictResult } from "./types";
 import { buildVerdict } from "./verdict-engine";
+import { toDecision } from "./decisions";
+import * as db from "./fitting-room-db";
 
 interface FlowState {
   step: Step;
-  personImage: string | null; // data URL
+  personImage: string | null; // data URL — also persisted to IndexedDB
   garment: Garment | null; // resolved garment (default or built from custom input)
   customGarment: CustomGarmentInput | null;
   tryOn: TryOnResult | null;
@@ -25,12 +29,20 @@ interface FlowState {
   currentQuestionIndex: number;
   verdict: VerdictResult | null;
 
+  // Persistent fitting-room state (hydrated from IndexedDB on mount).
+  savedResults: FittingRoomEntry[];
+  hydrated: boolean;
+
   // navigation
   setStep: (step: Step) => void;
   reset: () => void;
+  tryAnotherGarment: () => void;
+  clearFittingRoom: () => Promise<void>;
+  hydrateFromDB: () => Promise<void>;
 
   // photo
   setPersonImage: (dataUrl: string | null) => void;
+  setPersistedPersonPhoto: (dataUrl: string) => Promise<void>;
 
   // garment
   selectDefaultGarment: (id: string) => void;
@@ -49,6 +61,12 @@ interface FlowState {
 
   // verdict
   finalizeVerdict: () => void;
+
+  // fitting-room entry management
+  getCachedResult: (garmentId: string) => FittingRoomEntry | null;
+  saveCurrentResultToFittingRoom: () => Promise<void>;
+  deleteSavedResult: (id: string) => Promise<void>;
+  loadSavedResultIntoSession: (id: string) => void;
 }
 
 function emptyAnswers(): AnswerMap {
@@ -59,6 +77,24 @@ function emptyAnswers(): AnswerMap {
     care: null,
     regret: null,
   };
+}
+
+/**
+ * Clear only the per-garment session state — keep the person photo and
+ * every saved fitting-room entry. Used by `tryAnotherGarment()` so the
+ * user can pick the next garment without re-uploading their photo.
+ */
+function clearSession(set: (partial: Partial<FlowState>) => void) {
+  set({
+    garment: null,
+    customGarment: null,
+    tryOn: null,
+    tryOnStatus: "idle",
+    tryOnError: null,
+    answers: emptyAnswers(),
+    currentQuestionIndex: 0,
+    verdict: null,
+  });
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -72,11 +108,36 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   answers: emptyAnswers(),
   currentQuestionIndex: 0,
   verdict: null,
+  savedResults: [],
+  hydrated: false,
 
   setStep: (step) => set({ step }),
+
   reset: () =>
     set({
       step: "intro",
+      garment: null,
+      customGarment: null,
+      tryOn: null,
+      tryOnStatus: "idle",
+      tryOnError: null,
+      answers: emptyAnswers(),
+      currentQuestionIndex: 0,
+      verdict: null,
+      // Intentionally do NOT clear personImage or savedResults here —
+      // `reset()` is a "go back to intro" navigation action, not a
+      // "wipe the fitting room" action. Use `clearFittingRoom()` for
+      // the latter.
+    }),
+
+  tryAnotherGarment: () => {
+    clearSession(set);
+    set({ step: "garment" });
+  },
+
+  clearFittingRoom: async () => {
+    await db.clearAll();
+    set({
       personImage: null,
       garment: null,
       customGarment: null,
@@ -86,9 +147,40 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       answers: emptyAnswers(),
       currentQuestionIndex: 0,
       verdict: null,
-    }),
+      savedResults: [],
+      step: "intro",
+    });
+  },
 
-  setPersonImage: (dataUrl) => set({ personImage: dataUrl }),
+  hydrateFromDB: async () => {
+    if (get().hydrated) return;
+    const [person, looks] = await Promise.all([
+      db.loadPersonPhoto(),
+      db.loadAllLooks(),
+    ]);
+    set({
+      personImage: person?.dataUrl ?? null,
+      savedResults: looks,
+      hydrated: true,
+    });
+  },
+
+  setPersonImage: (dataUrl) => {
+    set({ personImage: dataUrl });
+    // Best-effort persist — fire and forget. If IndexedDB is unavailable
+    // (private mode, SSR, etc.) the photo still works for the current
+    // session via the in-memory store.
+    if (dataUrl) {
+      void db.savePersonPhoto(dataUrl);
+    } else {
+      void db.clearPersonPhoto();
+    }
+  },
+
+  setPersistedPersonPhoto: async (dataUrl) => {
+    set({ personImage: dataUrl });
+    await db.savePersonPhoto(dataUrl);
+  },
 
   selectDefaultGarment: (id) => {
     const g = DEFAULT_GARMENTS.find((gg) => gg.id === id);
@@ -104,7 +196,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       material: "Not specified",
       care: input.care,
       type: input.type,
-      category: "unclear-occasion", // custom garments default to the generic risk bucket
+      category: "unclear-occasion",
       categoryLabel: "Custom upload",
       purchaseTension: "User-supplied garment",
       imageUrl: input.imageUrl,
@@ -155,5 +247,107 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     const { answers, garment } = get();
     const verdict = buildVerdict(answers, garment);
     set({ verdict });
+  },
+
+  getCachedResult: (garmentId) => {
+    return get().savedResults.find((r) => r.id === garmentId) ?? null;
+  },
+
+  saveCurrentResultToFittingRoom: async () => {
+    const { garment, tryOn, answers, verdict, savedResults } = get();
+    if (!garment || !tryOn || !verdict) return;
+    // Don't save fallback results to the fitting room — they aren't real
+    // VTO outputs and would mislead the user on revisit. Demo results
+    // are also not saved (they aren't tied to the user's actual photo).
+    if (tryOn.fallback || tryOn.demo) return;
+
+    const decision: Decision = toDecision(verdict.verdict.id, verdict.totalScore);
+    const entry: FittingRoomEntry = {
+      id: garment.id,
+      isCustom: !garment.isDefault,
+      garmentName: garment.name,
+      garmentImage: garment.imageUrl,
+      garmentType: garment.type,
+      tryOnImage: tryOn.imageUrl,
+      tryOnIsReal: !tryOn.demo && !tryOn.fallback,
+      answers,
+      score: verdict.totalScore,
+      verdictId: verdict.verdict.id,
+      decision,
+      updatedAt: Date.now(),
+    };
+    await db.saveLook(entry);
+    // Update in-memory list (replace if already present, else prepend).
+    const filtered = savedResults.filter((r) => r.id !== entry.id);
+    set({ savedResults: [entry, ...filtered] });
+  },
+
+  deleteSavedResult: async (id) => {
+    await db.deleteLook(id);
+    set((state) => ({
+      savedResults: state.savedResults.filter((r) => r.id !== id),
+    }));
+  },
+
+  loadSavedResultIntoSession: (id) => {
+    const entry = get().savedResults.find((r) => r.id === id);
+    if (!entry) return;
+    // Hydrate the session from a saved entry so the user can revisit
+    // the full verdict / answers / try-on without re-calling YouCam.
+    const garment: Garment = entry.isCustom
+      ? {
+          id: entry.id,
+          name: entry.garmentName,
+          price: 0,
+          currency: "USD",
+          material: "Not specified",
+          care: "",
+          type: entry.garmentType,
+          category: "unclear-occasion",
+          categoryLabel: "Custom upload",
+          purchaseTension: "User-supplied garment",
+          imageUrl: entry.garmentImage,
+          roastLines: [
+            "You brought this in yourself. The fitting room will not be gentler because of it.",
+            "Custom uploads are the most honest test of the whole flow.",
+          ],
+          isDefault: false,
+        }
+      : DEFAULT_GARMENTS.find((g) => g.id === entry.id) ?? {
+          id: entry.id,
+          name: entry.garmentName,
+          price: 0,
+          currency: "USD",
+          material: "",
+          care: "",
+          type: entry.garmentType,
+          category: "unclear-occasion",
+          categoryLabel: "",
+          purchaseTension: "",
+          imageUrl: entry.garmentImage,
+          roastLines: ["", ""],
+          isDefault: true,
+        };
+
+    // Rebuild the verdict from the saved answers so all evidence / roast
+    // lines / constructive note are available without re-running the
+    // engine wiring.
+    const verdict = buildVerdict(entry.answers, garment);
+
+    set({
+      garment,
+      customGarment: null,
+      tryOn: {
+        imageUrl: entry.tryOnImage,
+        demo: false,
+        fallback: false,
+      },
+      tryOnStatus: "success",
+      tryOnError: null,
+      answers: entry.answers,
+      currentQuestionIndex: 0,
+      verdict,
+      step: "verdict",
+    });
   },
 }));

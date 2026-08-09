@@ -16,11 +16,34 @@ The product is **not anti-shopping**. It is **anti-impulse shopping**. The syste
 
 ### The five-step flow
 
-1. **Upload a photo** — full-body or half-body, camera or file upload.
+1. **Upload a photo** — full-body or half-body, camera or file upload. **Only done once** — your fitting photo is saved on this device so you never need to re-upload on return visits.
 2. **Pick a garment** — nine garments from **Crystal's Closet** (the creator's pre-owned wardrobe) covering distinct purchase-risk categories, or upload your own.
-3. **Virtual try-on** — YouCam Apparel VTO generates a composite. Falls back to a clearly-labeled pre-generated demo result if the API is unavailable.
+3. **Virtual try-on** — YouCam Apparel VTO generates a composite. **Every successful VTO is cached** — re-visiting a garment shows the saved result without calling YouCam again. Falls back to a clearly-labeled pre-generated demo result if the API is unavailable.
 4. **Five honest questions** — occasion, duplication, budget, care, regret.
-5. **Verdict card** — one of four explainable verdicts with score, evidence, roast lines, and a constructive closing note.
+5. **Verdict card** — one of four explainable verdicts with score, evidence, roast lines, and a constructive closing note. The verdict is also collapsed into a binary **WORTH TRYING IN PERSON** / **SKIP IT** decision and saved to **My Fitting Room**.
+
+### My Fitting Room — persistent device-local looks
+
+Every successful try-on + completed verdict is saved to a persistent **My Fitting Room** view so the user can:
+
+- Try many garments over time without re-uploading their photo or re-calling YouCam
+- Compare saved looks side-by-side
+- See which Crystal's Closet garments they have already tried (and which are still pending)
+- Re-open any saved look to revisit the full verdict / answers / try-on image without re-calling YouCam
+- Clear everything at any time
+
+**Storage:** IndexedDB, device-local only. No login, no account, no cloud sync, no cross-device. The user's fitting photo and saved try-on results never leave the device except for the active YouCam API call.
+
+### Binary decision presentation
+
+The underlying 4-verdict deterministic engine is unchanged. At the presentation layer, the user-facing decision converges into two outcomes:
+
+| Score | Original verdict(s) | Binary decision | Meaning |
+|-------|---------------------|-----------------|--------|
+| 0–7   | BUY IT, TRY IN STORE | **WORTH TRYING IN PERSON** | Virtual try-on looks promising AND purchase reasoning holds up — worth a real fitting room visit. |
+| 8–19  | BORROW OR RENT, WALK AWAY | **SKIP IT** | Purchase reasoning is not strong enough to justify further time or money, regardless of how the garment looks. |
+
+The original 4-verdict label, score, evidence, and constructive note are still shown in the verdict detail view — the binary decision is a presentation overlay, not a replacement of the engine.
 
 ### Crystal's Closet — sample garment provenance
 
@@ -204,11 +227,10 @@ The final hackathon submission must demonstrate real YouCam API integration, whi
 
 ### Privacy
 
+- **Your fitting photo and saved try-on results stay on this device.** They are stored in IndexedDB (browser-local) and are not uploaded to any Talk Me Out of It account or cloud history. You can clear them at any time via **Clear Fitting Room**.
 - Personal photos are sent to YouCam **only** for the active try-on request.
-- Photos are **not** saved to a permanent user history.
-- Photos are **not** placed in `localStorage`.
-- The Zustand store keeps the photo only in memory for the duration of the session.
-- YouCam temporarily processes and stores uploads and generated results under its service terms. The server proxy downloads the result immediately and returns a compressed data URL to the browser.
+- YouCam temporarily processes and stores uploads and generated results under its service terms. The server proxy downloads the result immediately and returns a compressed data URL to the browser, which is then persisted to IndexedDB so the same garment does not need to be re-tried.
+- The Zustand store keeps the in-session state in memory; the persistent layer (person photo + saved looks) lives in IndexedDB.
 - `.env.local` (containing the API key) is gitignored and never committed.
 
 ### Roast system red lines
@@ -245,7 +267,7 @@ All roast lines come from a fixed, approved English copy library in `src/lib/cop
 3. **Result URLs are S3 presigned URLs** that expire after 2 hours. The proxy downloads and converts to a data URL immediately, so users never encounter expiry.
 4. **VTO output may have artifacts** — shoulder seams, fabric draping, and hand positions can look unnatural. This is a limitation of the YouCam model, not the integration.
 5. **Images must be JPEG or PNG** — SVG and WebP are normalized to JPEG before upload.
-6. **No database, no session persistence** — refreshing the page resets the entire flow. This is intentional for the MVP.
+6. **Device-local persistence via IndexedDB** — the fitting photo and saved looks persist across refreshes and browser restarts on the same device. There is no cloud sync and no account system. Use **Clear Fitting Room** to wipe everything.
 
 ---
 
@@ -269,16 +291,19 @@ src/
 │   │   ├── garment-select-step.tsx
 │   │   ├── tryon-result-step.tsx
 │   │   ├── interrogation-step.tsx
-│   │   └── verdict-card-step.tsx
+│   │   ├── verdict-card-step.tsx
+│   │   └── fitting-room-step.tsx   # My Fitting Room — persistent looks grid
 │   └── ui/                     # shadcn/ui primitives
 └── lib/
-    ├── types.ts                # Domain types
+    ├── types.ts                # Domain types (incl. FittingRoomEntry, Decision)
     ├── garments.ts             # Crystal's Closet — 9 default garments + attribution
     ├── questions.ts            # 5 questions, scoring matrix
     ├── copy.ts                 # English copy library + UI strings
     ├── verdicts.ts             # Verdict definitions + thresholds
     ├── verdict-engine.ts       # Pure scoring + evidence + roast selection
-    ├── store.ts                # Zustand flow store
+    ├── decisions.ts            # Binary presentation-layer decision (TRY_IRL / SKIP)
+    ├── store.ts                # Zustand flow store (session + persistent fitting room)
+    ├── fitting-room-db.ts      # IndexedDB wrapper (person photo + saved looks)
     └── youcam-client.ts        # Live-verified YouCam API typed client
 
 scripts/

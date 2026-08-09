@@ -8,6 +8,13 @@ import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
 import type { TryOnResult } from "@/lib/types";
 
+/**
+ * Module-level guard against double-running the try-on for the same
+ * garment in React StrictMode (dev only — production doesn't double-fire).
+ * Keyed by garment id so switching garments re-allows the effect.
+ */
+let lastStartedGarmentId: string | null = null;
+
 function dataUrlToBlob(dataUrl: string): Blob {
   const [meta, b64] = dataUrl.split(",");
   const mime = /:(.*?);/.exec(meta)?.[1] ?? "image/jpeg";
@@ -134,16 +141,35 @@ export function TryOnResultStep() {
   const setTryOnLoading = useFlowStore((s) => s.setTryOnLoading);
   const setTryOnSuccess = useFlowStore((s) => s.setTryOnSuccess);
   const setTryOnError = useFlowStore((s) => s.setTryOnError);
+  const getCachedResult = useFlowStore((s) => s.getCachedResult);
+  const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
 
   const [progressStep, setProgressStep] = useState(0);
-  const startedRef = useRef(false);
+  const [usedCache, setUsedCache] = useState(false);
 
   // Kick off the try-on once per mount (or retry).
-  const runTryOn = async () => {
+  const runTryOn = async (opts: { forceFresh?: boolean } = {}) => {
     if (!personImage || !garment) return;
+
+    // Cache check — if we already have a saved result for this garment
+    // AND the user didn't explicitly ask to regenerate, show the cached
+    // result without calling YouCam again. This is the persistent
+    // fitting-room behaviour.
+    if (!opts.forceFresh) {
+      const cached = getCachedResult(garment.id);
+      if (cached && cached.tryOnIsReal) {
+        setUsedCache(true);
+        setTryOnSuccess({
+          imageUrl: cached.tryOnImage,
+          demo: false,
+          fallback: false,
+        });
+        return;
+      }
+    }
+    setUsedCache(false);
     setTryOnLoading();
     setProgressStep(0);
-    startedRef.current = true;
 
     // Animate the progress messaging while we wait.
     const interval = setInterval(() => {
@@ -186,6 +212,10 @@ export function TryOnResultStep() {
           unitsUsed: data.unitsUsed,
         };
         setTryOnSuccess(result);
+        // Persist the real YouCam result to the fitting room immediately
+        // so a refresh or "try another" doesn't lose it. Demo / fallback
+        // results are intentionally NOT saved (see store.ts).
+        void saveCurrentResultToFittingRoom();
       } else {
         // Fallback path: still let the user continue.
         const fallback: TryOnResult = {
@@ -210,18 +240,31 @@ export function TryOnResultStep() {
   };
 
   useEffect(() => {
-    if (!startedRef.current && tryOnStatus === "idle") {
-      startedRef.current = true;
-      const id = setTimeout(() => {
-        void runTryOn();
-      }, 0);
-      return () => clearTimeout(id);
-    }
-  }, []);
-
+    // In React StrictMode (dev), effects fire twice: setup → cleanup → setup.
+    // The original implementation used a startedRef + setTimeout that the
+    // cleanup could clear, which meant the second setup saw startedRef=true
+    // and skipped — so runTryOn never actually ran in dev.
+    //
+    // Fix: use a module-level flag keyed by garment id so the guard
+    // survives the StrictMode unmount/remount cycle within the same
+    // garment. The setTimeout defers the setState call so we don't
+    // trigger the react-hooks/set-state-in-effect lint rule, and we
+    // DON'T return a cleanup that clears it (the StrictMode cleanup
+    // was what ate the original setTimeout).
+    const garmentId = garment?.id;
+    if (!garmentId) return;
+    if (lastStartedGarmentId === garmentId && tryOnStatus !== "idle") return;
+    lastStartedGarmentId = garmentId;
+    const id = setTimeout(() => {
+      void runTryOn();
+    }, 0);
+    // Intentionally no cleanup — see comment above.
+    void id;
+  }, [garment?.id]);
   const isLoading = tryOnStatus === "loading";
   const showFallback = tryOn?.fallback === true;
   const showDemo = tryOn?.demo === true && !showFallback;
+  const showCached = usedCache && !showFallback && !showDemo;
 
   return (
     <div className="mx-auto flex min-h-[100svh] max-w-4xl flex-col px-5 py-8">
@@ -280,6 +323,16 @@ export function TryOnResultStep() {
             className="flex flex-col gap-5"
           >
             {/* Banner */}
+            {showCached && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-center border border-[#30d158]/60 bg-[#30d158]/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#30d158]">
+                  {UI_COPY.tryon.cachedBanner}
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {UI_COPY.tryon.cachedExplanation}
+                </p>
+              </div>
+            )}
             {showDemo && (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-center border border-warm-accent/60 bg-warm-accent/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-warm-accent">
@@ -296,7 +349,7 @@ export function TryOnResultStep() {
                 {UI_COPY.tryon.fallbackBanner}
               </div>
             )}
-            {!showDemo && !showFallback && (
+            {!showDemo && !showFallback && !showCached && (
               <div className="flex items-center justify-center gap-2 border border-[#30d158]/60 bg-[#30d158]/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#30d158]">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#30d158]" />
                 Real YouCam API result
@@ -397,7 +450,7 @@ export function TryOnResultStep() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                onClick={runTryOn}
+                onClick={() => runTryOn({ forceFresh: true })}
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
               >
                 <RefreshCw className="h-3.5 w-3.5" />

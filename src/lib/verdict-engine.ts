@@ -136,7 +136,7 @@ export function formatVerdictForClipboard(
   lines.push(`Impulse score: ${result.totalScore} / ${result.maxScore}`);
   lines.push("");
   if (garment) {
-    lines.push(`Garment: ${garment.name} — $${garment.price}`);
+    lines.push(`Garment: ${garment.name}`);
     lines.push("");
   }
   lines.push("Why this verdict:");

@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, Copy, Check, Sparkles } from "lucide-react";
+import { Copy, Check, Sparkles, Shirt, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
 import { formatVerdictForClipboard } from "@/lib/verdict-engine";
+import { toDecision } from "@/lib/decisions";
 import { useToast } from "@/hooks/use-toast";
 
 type Phase = "score_animating" | "revealing_evidence" | "revealing_roast" | "showing_note";
 
 export function VerdictCardStep() {
   const setStep = useFlowStore((s) => s.setStep);
-  const reset = useFlowStore((s) => s.reset);
+  const tryAnotherGarment = useFlowStore((s) => s.tryAnotherGarment);
   const verdict = useFlowStore((s) => s.verdict);
   const garment = useFlowStore((s) => s.garment);
+  const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
   const { toast } = useToast();
 
   const [displayScore, setDisplayScore] = useState(0);
@@ -126,9 +128,18 @@ export function VerdictCardStep() {
     }
   };
 
-  const handleRestart = () => {
-    reset();
-    setStep("intro");
+  const handleTryAnother = () => {
+    // Persist the current completed look to the fitting room before
+    // clearing the per-garment session. Best-effort — the verdict is
+    // already saved at try-on success, this is a safety net for the
+    // case where the user only answered questions after a cache hit.
+    void saveCurrentResultToFittingRoom();
+    tryAnotherGarment();
+  };
+
+  const handleViewFittingRoom = () => {
+    void saveCurrentResultToFittingRoom();
+    setStep("fitting-room");
   };
 
   return (
@@ -193,6 +204,46 @@ export function VerdictCardStep() {
             >
               {v.meaning}
             </motion.p>
+          )}
+        </AnimatePresence>
+
+        {/* Binary decision badge — presentation layer only */}
+        <AnimatePresence>
+          {scoreDone && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.45 }}
+              className="mt-6"
+            >
+              {(() => {
+                const decision = toDecision(v.id, verdict.totalScore);
+                const isTryIrl = decision === "TRY_IRL";
+                const color = isTryIrl ? "#30D158" : "#FF3B30";
+                const short = isTryIrl
+                  ? UI_COPY.verdict.decisionTryIrlShort
+                  : UI_COPY.verdict.decisionSkipShort;
+                const long = isTryIrl
+                  ? UI_COPY.verdict.decisionTryIrlLong
+                  : UI_COPY.verdict.decisionSkipLong;
+                return (
+                  <div
+                    className="mx-auto inline-flex flex-col items-center gap-2 border px-5 py-3"
+                    style={{ borderColor: `${color}60`, backgroundColor: `${color}10` }}
+                  >
+                    <div
+                      className="font-display text-base font-bold tracking-[0.18em]"
+                      style={{ color }}
+                    >
+                      {short}
+                    </div>
+                    <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+                      {long}
+                    </p>
+                  </div>
+                );
+              })()}
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.section>
@@ -311,15 +362,23 @@ export function VerdictCardStep() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="mt-6 flex flex-col gap-2 sm:flex-row"
+            className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
           >
             <button
               type="button"
-              onClick={handleRestart}
+              onClick={handleTryAnother}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              {UI_COPY.verdict.restartCta}
+              <Shirt className="h-3.5 w-3.5" />
+              {UI_COPY.verdict.tryAnotherCta}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleViewFittingRoom}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-warm-accent/60 bg-warm-accent/5 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-warm-accent transition-colors hover:bg-warm-accent/10"
+            >
+              {UI_COPY.verdict.viewFittingRoomCta}
             </button>
             <button
               type="button"

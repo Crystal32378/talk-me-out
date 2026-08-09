@@ -29,6 +29,7 @@ export function PhotoUploadStep() {
   const [streaming, setStreaming] = useState(false);
   const [imageDimensions, setImageDimensions] = useState<{ w: number; h: number } | null>(null);
   const [headshotLikely, setHeadshotLikely] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -49,6 +50,7 @@ export function PhotoUploadStep() {
       try {
         const dataUrl = await fileToDataUrl(file);
         setPersonImage(dataUrl);
+        setShowUploader(false);
         // Check dimensions for headshot heuristic.
         const img = new Image();
         img.onload = () => {
@@ -118,6 +120,7 @@ export function PhotoUploadStep() {
     ctx.drawImage(video, 0, 0, w, h);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
     setPersonImage(dataUrl);
+    setShowUploader(false);
     stopCamera();
   }, [setPersonImage, stopCamera]);
 
@@ -136,6 +139,7 @@ export function PhotoUploadStep() {
     setError(null);
     setImageDimensions(null);
     setHeadshotLikely(false);
+    setShowUploader(true);
   }, [setPersonImage]);
 
   return (
@@ -151,7 +155,59 @@ export function PhotoUploadStep() {
 
       <div className="flex-1">
         <AnimatePresence mode="wait">
-          {personImage ? (
+          {personImage && !showUploader ? (
+            <motion.div
+              key="persisted"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center gap-5"
+            >
+              <div className="text-center">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-warm-accent">
+                  {UI_COPY.photo.persistedHeading}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {UI_COPY.photo.persistedHint}
+                </div>
+              </div>
+
+              <div className="relative w-full max-w-sm overflow-hidden rounded-lg border border-border bg-card">
+                <img
+                  src={personImage}
+                  alt="Your saved fitting photo"
+                  className="aspect-[3/4] w-full object-cover"
+                />
+                <div className="absolute left-3 top-3 border border-[#30d158]/60 bg-black/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[#30d158] backdrop-blur">
+                  On this device
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setImageDimensions(null);
+                    setHeadshotLikely(false);
+                    setShowUploader(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {UI_COPY.photo.changePersistedCta}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep("garment")}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
+                >
+                  {UI_COPY.photo.usePersistedCta}
+                </button>
+              </div>
+            </motion.div>
+          ) : personImage ? (
             <motion.div
               key="preview"
               initial={{ opacity: 0, scale: 0.98 }}

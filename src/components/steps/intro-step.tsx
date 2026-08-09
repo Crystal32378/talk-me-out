@@ -28,11 +28,12 @@ export function IntroStep() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-balance sm:text-5xl md:text-6xl">
-            Looks amazing on you.
-            <br />
-            <span className="text-warm-accent">
-              Now let&apos;s talk about whether you should buy it.
-            </span>
+            {intro.title.split("\n").map((line, i) => (
+              <span key={i}>
+                {i === 1 ? <span className="text-warm-accent">{line}</span> : line}
+                {i === 0 && <br />}
+              </span>
+            ))}
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
