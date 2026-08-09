@@ -48,9 +48,9 @@ const GARMENTS: GarmentSpec[] = [
   { slug: "black-white-lace-top",         name: "Black & White Lace Top",       type: "Top",       imageUrl: "/garments/black-white-lace-top.jpg" },
   { slug: "black-floral-wrap-maxi-dress", name: "Black Floral Wrap Maxi Dress", type: "Dress",     imageUrl: "/garments/black-floral-wrap-maxi-dress.jpg" },
   { slug: "sage-utility-jacket",          name: "Sage Utility Jacket",          type: "Outerwear", imageUrl: "/garments/sage-utility-jacket.jpg" },
-  { slug: "red-short-sleeve-dress",       name: "Red Short-Sleeve Dress",       type: "Dress",     imageUrl: "/garments/red-short-sleeve-dress.jpg" },
+  { slug: "navy-ruffle-dress",            name: "Navy Ruffle Dress",            type: "Dress",     imageUrl: "/garments/navy-ruffle-dress.jpg" },
   { slug: "beige-linen-feel-dress",       name: "Beige Linen-Feel Dress",       type: "Dress",     imageUrl: "/garments/beige-linen-feel-dress.jpg" },
-  { slug: "black-ruffle-mini-dress",      name: "Black Ruffle Mini Dress",      type: "Dress",     imageUrl: "/garments/black-ruffle-mini-dress.jpg" },
+  { slug: "pink-illustrated-print-romper", name: "Pink Illustrated Print Romper", type: "Dress",   imageUrl: "/garments/pink-illustrated-print-romper.jpg" },
 ];
 
 async function loadEnvLocal() {
