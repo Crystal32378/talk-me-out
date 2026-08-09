@@ -97,6 +97,27 @@ function clearSession(set: (partial: Partial<FlowState>) => void) {
   });
 }
 
+/**
+ * Semantic equality for fitting-room entries. Two entries describe the
+ * same completed look when every field a verdict depends on matches:
+ * the answers, the derived verdict/decision/score, and the try-on image.
+ * `updatedAt` is intentionally excluded — it is bookkeeping, not meaning.
+ * Centralized here so every save path (verdict effect, "Try another",
+ * "View my fitting room") is idempotent by construction.
+ */
+function isSameLook(a: FittingRoomEntry, b: FittingRoomEntry): boolean {
+  return (
+    a.id === b.id &&
+    a.tryOnImage === b.tryOnImage &&
+    a.verdictId === b.verdictId &&
+    a.decision === b.decision &&
+    a.score === b.score &&
+    QUESTIONS.every(
+      (q) => a.answers[q.id as keyof AnswerMap] === b.answers[q.id as keyof AnswerMap],
+    )
+  );
+}
+
 export const useFlowStore = create<FlowState>((set, get) => ({
   step: "intro",
   personImage: null,
@@ -285,6 +306,14 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       decision,
       updatedAt: Date.now(),
     };
+
+    // Idempotency: if a semantically identical entry is already saved,
+    // report success without rewriting it — repeated calls (verdict
+    // effect, "Try another", "View my fitting room") must not churn
+    // `updatedAt` or reorder the fitting room.
+    const existing = savedResults.find((r) => r.id === entry.id);
+    if (existing && isSameLook(existing, entry)) return true;
+
     try {
       await db.saveLook(entry);
     } catch {

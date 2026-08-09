@@ -19,7 +19,6 @@ export function VerdictCardStep() {
   const garment = useFlowStore((s) => s.garment);
   const tryOn = useFlowStore((s) => s.tryOn);
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
-  const getCachedResult = useFlowStore((s) => s.getCachedResult);
   const { toast } = useToast();
 
   const [displayScore, setDisplayScore] = useState(0);
@@ -70,22 +69,13 @@ export function VerdictCardStep() {
   }, [verdict]);
 
   // Persist the completed look once the verdict exists. The chip is only
-  // shown after the IndexedDB write actually succeeds (store returns
-  // true) — never for demo / fallback / incomplete flows, which the
-  // store refuses to save. If an identical entry is already in the
-  // fitting room (revisit path), show the chip without rewriting it.
+  // shown after the store reports success — either a verified IndexedDB
+  // write, or a semantically identical entry already saved (the store's
+  // centralized dedupe makes repeated calls idempotent). Never shown for
+  // demo / fallback / incomplete flows, which the store refuses to save.
   useEffect(() => {
     if (!verdict || !garment || !tryOn) return;
     if (tryOn.demo || tryOn.fallback) return;
-    const cached = getCachedResult(garment.id);
-    if (
-      cached &&
-      cached.score === verdict.totalScore &&
-      cached.tryOnImage === tryOn.imageUrl
-    ) {
-      const t = setTimeout(() => setSavedToRoom(true), 0);
-      return () => clearTimeout(t);
-    }
     let cancelled = false;
     void saveCurrentResultToFittingRoom().then((ok) => {
       if (!cancelled && ok) setSavedToRoom(true);
@@ -93,7 +83,7 @@ export function VerdictCardStep() {
     return () => {
       cancelled = true;
     };
-  }, [verdict, garment?.id, tryOn?.imageUrl, tryOn?.demo, tryOn?.fallback]);
+  }, [verdict, garment, tryOn, saveCurrentResultToFittingRoom]);
 
   // Stagger evidence reveal — only after score animation completes.
   useEffect(() => {
@@ -179,10 +169,10 @@ export function VerdictCardStep() {
   };
 
   const handleTryAnother = () => {
-    // Persist the current completed look to the fitting room before
-    // clearing the per-garment session. Best-effort — the verdict is
-    // already saved at try-on success, this is a safety net for the
-    // case where the user only answered questions after a cache hit.
+    // Idempotent: the verdict effect above has normally already saved
+    // this look; the store's semantic dedupe turns this repeat call into
+    // a no-op (no updatedAt churn). Kept so the look is still persisted
+    // if the effect's write failed transiently.
     void saveCurrentResultToFittingRoom();
     tryAnotherGarment();
   };
@@ -452,7 +442,7 @@ export function VerdictCardStep() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
             onClick={() => setStep("fitting-room")}
-            className="mt-4 inline-flex items-center gap-2 self-start rounded-md border border-[#30d158]/50 bg-[#30d158]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#30d158] transition-colors hover:bg-[#30d158]/20"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-md border border-[#30d158]/50 bg-[#30d158]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#30d158] transition-colors hover:bg-[#30d158]/20"
           >
             <Check className="h-3.5 w-3.5" />
             {UI_COPY.verdict.savedToFittingRoom}

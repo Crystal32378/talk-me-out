@@ -442,6 +442,13 @@ export function TryOnResultStep() {
             {/* Actions — primary: continue; secondary: try another garment;
                 tertiary: regenerate (explicit about the extra YouCam call) */}
             <div className="flex flex-col gap-3">
+              {/* Honest only for a fresh real result: demo/fallback looks
+                  are never saved, and a cached look is already saved. */}
+              {!showDemo && !showFallback && !showCached && (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {UI_COPY.tryon.saveHint}
+                </p>
+              )}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
@@ -464,7 +471,7 @@ export function TryOnResultStep() {
                 <button
                   type="button"
                   onClick={() => runTryOn({ forceFresh: true })}
-                  className="inline-flex items-center gap-1.5 self-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                  className="inline-flex min-h-11 items-center gap-1.5 self-start py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
                 >
                   <RefreshCw className="h-3 w-3" />
                   {UI_COPY.tryon.regenerateCta}

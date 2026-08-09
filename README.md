@@ -18,13 +18,13 @@ The product is **not anti-shopping**. It is **anti-impulse shopping**. The syste
 
 1. **Upload a photo** — full-body or half-body, camera or file upload. **Only done once** — your fitting photo is saved on this device so you never need to re-upload on return visits.
 2. **Pick a garment** — nine garments from **Crystal's Closet** (the creator's pre-owned wardrobe) covering distinct purchase-risk categories, or upload your own.
-3. **Virtual try-on** — YouCam Apparel VTO generates a composite. **Every successful VTO is cached** — re-visiting a garment shows the saved result without calling YouCam again. Falls back to a clearly-labeled pre-generated demo result if the API is unavailable.
+3. **Virtual try-on** — YouCam Apparel VTO generates a composite. **Every verdict-completed real VTO is cached** — re-visiting a garment whose interrogation you completed shows the saved result without calling YouCam again. A try-on abandoned before the five questions is not persisted. Falls back to a clearly-labeled pre-generated demo result if the API is unavailable.
 4. **Five honest questions** — occasion, duplication, budget, care, regret.
 5. **Verdict card** — one of four explainable verdicts with score, evidence, roast lines, and a constructive closing note. The verdict is also collapsed into a binary **WORTH TRYING IN PERSON** / **SKIP IT** decision and saved to **My Fitting Room**.
 
 ### My Fitting Room — persistent device-local looks
 
-Every successful try-on + completed verdict is saved to a persistent **My Fitting Room** view so the user can:
+Every verdict-completed real try-on is saved to a persistent **My Fitting Room** view so the user can:
 
 - Try many garments over time without re-uploading their photo or re-calling YouCam
 - Compare saved looks side-by-side
