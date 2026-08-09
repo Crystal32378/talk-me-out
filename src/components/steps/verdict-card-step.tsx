@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Sparkles, Shirt, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -26,6 +26,10 @@ export function VerdictCardStep() {
   const [revealedEvidence, setRevealedEvidence] = useState(0);
   const [revealedRoast, setRevealedRoast] = useState(0);
   const [copied, setCopied] = useState(false);
+  // Set only via the explicit "Skip animation" button. Deferred phase
+  // transitions check this flag so a pending timer can never drag the
+  // card back to an earlier phase after the user has skipped ahead.
+  const skippedRef = useRef(false);
 
   // Animate score counting up to the final value.
   // Only when the count reaches the target do we transition to the next phase.
@@ -35,7 +39,9 @@ export function VerdictCardStep() {
     // For score 0, skip the count-up and go straight to done.
     if (target === 0) {
       const t1 = setTimeout(() => setDisplayScore(0), 0);
-      const t2 = setTimeout(() => setPhase("revealing_evidence"), 400);
+      const t2 = setTimeout(() => {
+        if (!skippedRef.current) setPhase("revealing_evidence");
+      }, 400);
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
@@ -48,7 +54,9 @@ export function VerdictCardStep() {
         if (next >= target) {
           clearInterval(interval);
           // Wait a beat after the count-up finishes, then reveal verdict.
-          setTimeout(() => setPhase("revealing_evidence"), 450);
+          setTimeout(() => {
+            if (!skippedRef.current) setPhase("revealing_evidence");
+          }, 450);
         }
         return next;
       });
@@ -69,7 +77,9 @@ export function VerdictCardStep() {
       setRevealedEvidence(i);
       if (i >= verdict.evidence.length) {
         clearInterval(interval);
-        setTimeout(() => setPhase("revealing_roast"), 500);
+        setTimeout(() => {
+          if (!skippedRef.current) setPhase("revealing_roast");
+        }, 500);
       }
     }, 450);
     return () => clearInterval(interval);
@@ -113,6 +123,14 @@ export function VerdictCardStep() {
   const evidenceDone = phase === "revealing_roast" || phase === "showing_note";
   const roastDone = phase === "showing_note";
 
+  const skipAnimation = () => {
+    skippedRef.current = true;
+    setDisplayScore(verdict.totalScore);
+    setRevealedEvidence(verdict.evidence.length);
+    setRevealedRoast(verdict.roastLines.length);
+    setPhase("showing_note");
+  };
+
   const handleCopy = async () => {
     const text = formatVerdictForClipboard(verdict, garment);
     try {
@@ -152,6 +170,21 @@ export function VerdictCardStep() {
           {UI_COPY.verdict.headingLabel}
         </span>
       </div>
+
+      {/* Explicit escape hatch for the reveal choreography. Kept as a
+          dedicated button (not whole-card click) so it never conflicts
+          with Copy / CTA / Fitting Room actions that appear later. */}
+      {!roastDone && (
+        <div className="mb-2 flex justify-end">
+          <button
+            type="button"
+            onClick={skipAnimation}
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-warm-accent/60 hover:text-foreground"
+          >
+            {UI_COPY.verdict.skipAnimationCta}
+          </button>
+        </div>
+      )}
 
       {/* Score + Stamp */}
       <motion.section

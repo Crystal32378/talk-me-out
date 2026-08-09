@@ -268,6 +268,7 @@ export const UI_COPY = {
     viewFittingRoomCta: "View my fitting room",
     restartCta: "Interrogate another purchase",
     copyCta: "Copy verdict",
+    skipAnimationCta: "Skip animation",
     copied: "Verdict copied to clipboard",
     shareHeading: "Talk Me Out of It",
     shareTagline: "Your brutally honest fitting-room friend.",
