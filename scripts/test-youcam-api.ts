@@ -71,9 +71,9 @@ async function main() {
 
   const personPath = path.join(process.cwd(), "public", "sample-person-real.jpg");
   // Use one of the Crystal's Closet garments as the default test garment.
-  // The trench coat exercises the Outerwear / upper_body mapping and tends
-  // to produce a stable, easy-to-judge VTO result.
-  const garmentPath = path.join(process.cwd(), "public", "garments", "vintage-beige-trench.jpg");
+  // The sage utility jacket exercises the Outerwear / upper_body mapping and
+  // produces a stable, easy-to-judge VTO result.
+  const garmentPath = path.join(process.cwd(), "public", "garments", "sage-utility-jacket.jpg");
 
   if (!existsSync(personPath)) {
     console.error(`❌ Person photo not found: ${personPath}`);

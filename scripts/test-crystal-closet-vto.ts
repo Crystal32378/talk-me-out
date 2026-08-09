@@ -42,12 +42,15 @@ interface GarmentSpec {
 }
 
 const GARMENTS: GarmentSpec[] = [
-  { slug: "yellow-floral-dress",     name: "Yellow Floral Dress",         type: "Dress",     imageUrl: "/garments/yellow-floral-dress.jpg" },
-  { slug: "black-white-check-dress", name: "Black & White Check Dress",   type: "Dress",     imageUrl: "/garments/black-white-check-dress.jpg" },
-  { slug: "lavender-maxi-dress",     name: "Lavender Maxi Dress",         type: "Dress",     imageUrl: "/garments/lavender-maxi-dress.jpg" },
-  { slug: "black-white-lace-top",    name: "Black & White Lace Top",      type: "Top",       imageUrl: "/garments/black-white-lace-top.jpg" },
-  { slug: "black-structured-dress",  name: "Black Structured Dress",      type: "Dress",     imageUrl: "/garments/black-structured-dress.jpg" },
-  { slug: "vintage-beige-trench",    name: "Vintage Beige Trench Coat",   type: "Outerwear", imageUrl: "/garments/vintage-beige-trench.jpg" },
+  { slug: "yellow-floral-dress",          name: "Yellow Floral Dress",          type: "Dress",     imageUrl: "/garments/yellow-floral-dress.jpg" },
+  { slug: "black-white-check-dress",      name: "Black & White Check Dress",    type: "Dress",     imageUrl: "/garments/black-white-check-dress.jpg" },
+  { slug: "lavender-maxi-dress",          name: "Lavender Maxi Dress",          type: "Dress",     imageUrl: "/garments/lavender-maxi-dress.jpg" },
+  { slug: "black-white-lace-top",         name: "Black & White Lace Top",       type: "Top",       imageUrl: "/garments/black-white-lace-top.jpg" },
+  { slug: "black-floral-wrap-maxi-dress", name: "Black Floral Wrap Maxi Dress", type: "Dress",     imageUrl: "/garments/black-floral-wrap-maxi-dress.jpg" },
+  { slug: "sage-utility-jacket",          name: "Sage Utility Jacket",          type: "Outerwear", imageUrl: "/garments/sage-utility-jacket.jpg" },
+  { slug: "red-short-sleeve-dress",       name: "Red Short-Sleeve Dress",       type: "Dress",     imageUrl: "/garments/red-short-sleeve-dress.jpg" },
+  { slug: "beige-linen-feel-dress",       name: "Beige Linen-Feel Dress",       type: "Dress",     imageUrl: "/garments/beige-linen-feel-dress.jpg" },
+  { slug: "black-ruffle-mini-dress",      name: "Black Ruffle Mini Dress",      type: "Dress",     imageUrl: "/garments/black-ruffle-mini-dress.jpg" },
 ];
 
 async function loadEnvLocal() {

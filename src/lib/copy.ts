@@ -182,7 +182,7 @@ export const UI_COPY = {
   },
   garment: {
     heading: "Pick your suspect.",
-    body: "Six garments from the creator's pre-owned wardrobe cover the most common purchase-risk patterns. You can also upload your own.",
+    body: "Nine garments from the creator's pre-owned wardrobe cover the most common purchase-risk patterns. You can also upload your own.",
     defaultTab: "Lineup",
     customTab: "Upload your own",
     selectCta: "Select this garment",

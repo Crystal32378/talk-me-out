@@ -5,7 +5,7 @@
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 12176,
+    "elapsedMs": 12968,
     "unitsUsed": null,
     "outputImage": "/home/z/my-project/repo/download/vto-test-yellow-floral-dress.jpg",
     "rawKeys": [
@@ -19,7 +19,7 @@
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 8413,
+    "elapsedMs": 11047,
     "unitsUsed": null,
     "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-check-dress.jpg",
     "rawKeys": [
@@ -33,7 +33,7 @@
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 10934,
+    "elapsedMs": 8380,
     "unitsUsed": null,
     "outputImage": "/home/z/my-project/repo/download/vto-test-lavender-maxi-dress.jpg",
     "rawKeys": [
@@ -47,7 +47,7 @@
     "type": "Top",
     "category": "upper_body",
     "status": "success",
-    "elapsedMs": 11006,
+    "elapsedMs": 11002,
     "unitsUsed": null,
     "outputImage": "/home/z/my-project/repo/download/vto-test-black-white-lace-top.jpg",
     "rawKeys": [
@@ -56,28 +56,70 @@
     ]
   },
   {
-    "slug": "black-structured-dress",
-    "name": "Black Structured Dress",
+    "slug": "black-floral-wrap-maxi-dress",
+    "name": "Black Floral Wrap Maxi Dress",
     "type": "Dress",
     "category": "full_body",
     "status": "success",
-    "elapsedMs": 10908,
+    "elapsedMs": 11071,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-black-structured-dress.jpg",
+    "outputImage": "/home/z/my-project/repo/download/vto-test-black-floral-wrap-maxi-dress.jpg",
     "rawKeys": [
       "status",
       "data"
     ]
   },
   {
-    "slug": "vintage-beige-trench",
-    "name": "Vintage Beige Trench Coat",
+    "slug": "sage-utility-jacket",
+    "name": "Sage Utility Jacket",
     "type": "Outerwear",
     "category": "upper_body",
     "status": "success",
-    "elapsedMs": 10953,
+    "elapsedMs": 10949,
     "unitsUsed": null,
-    "outputImage": "/home/z/my-project/repo/download/vto-test-vintage-beige-trench.jpg",
+    "outputImage": "/home/z/my-project/repo/download/vto-test-sage-utility-jacket.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "red-short-sleeve-dress",
+    "name": "Red Short-Sleeve Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 10875,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-red-short-sleeve-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "beige-linen-feel-dress",
+    "name": "Beige Linen-Feel Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 11158,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-beige-linen-feel-dress.jpg",
+    "rawKeys": [
+      "status",
+      "data"
+    ]
+  },
+  {
+    "slug": "black-ruffle-mini-dress",
+    "name": "Black Ruffle Mini Dress",
+    "type": "Dress",
+    "category": "full_body",
+    "status": "success",
+    "elapsedMs": 10915,
+    "unitsUsed": null,
+    "outputImage": "/home/z/my-project/repo/download/vto-test-black-ruffle-mini-dress.jpg",
     "rawKeys": [
       "status",
       "data"
