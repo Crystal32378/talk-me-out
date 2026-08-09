@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, RefreshCw, ArrowRight } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ArrowRight, Shirt } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
@@ -143,6 +143,7 @@ export function TryOnResultStep() {
   const setTryOnError = useFlowStore((s) => s.setTryOnError);
   const getCachedResult = useFlowStore((s) => s.getCachedResult);
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
+  const tryAnotherGarment = useFlowStore((s) => s.tryAnotherGarment);
 
   const [progressStep, setProgressStep] = useState(0);
   const [usedCache, setUsedCache] = useState(false);
@@ -212,9 +213,11 @@ export function TryOnResultStep() {
           unitsUsed: data.unitsUsed,
         };
         setTryOnSuccess(result);
-        // Persist the real YouCam result to the fitting room immediately
-        // so a refresh or "try another" doesn't lose it. Demo / fallback
-        // results are intentionally NOT saved (see store.ts).
+        // NOTE: on a fresh flow this is a no-op — the store refuses to
+        // save without a completed verdict (see store.ts), so nothing is
+        // persisted here. The look is actually saved on the verdict
+        // screen. This call is kept only for the revisit path where a
+        // verdict already exists in the session.
         void saveCurrentResultToFittingRoom();
       } else {
         // Fallback path: still let the user continue.
@@ -353,11 +356,6 @@ export function TryOnResultStep() {
               <div className="flex items-center justify-center gap-2 border border-[#30d158]/60 bg-[#30d158]/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#30d158]">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#30d158]" />
                 Real YouCam API result
-                {tryOn?.unitsUsed != null && (
-                  <span className="ml-2 normal-case tracking-normal text-[#30d158]/70">
-                    · {tryOn.unitsUsed} units consumed
-                  </span>
-                )}
               </div>
             )}
 
@@ -441,24 +439,47 @@ export function TryOnResultStep() {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => runTryOn({ forceFresh: true })}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                {UI_COPY.tryon.retryCta}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep("interrogation")}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
-              >
-                {UI_COPY.tryon.continueCta}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+            {/* Actions — primary: continue; secondary: try another garment;
+                tertiary: regenerate (explicit about the extra YouCam call) */}
+            <div className="flex flex-col gap-3">
+              {/* Honest only for a fresh real result: demo/fallback looks
+                  are never saved, and a cached look is already saved. */}
+              {!showDemo && !showFallback && !showCached && (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {UI_COPY.tryon.saveHint}
+                </p>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setStep("interrogation")}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
+                >
+                  {UI_COPY.tryon.continueCta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={tryAnotherGarment}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-warm-accent/60"
+                >
+                  <Shirt className="h-3.5 w-3.5" />
+                  {UI_COPY.tryon.tryAnotherCta}
+                </button>
+              </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => runTryOn({ forceFresh: true })}
+                  className="inline-flex min-h-11 items-center gap-1.5 self-start py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {UI_COPY.tryon.regenerateCta}
+                </button>
+                <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+                  {UI_COPY.tryon.regenerateNote}
+                </p>
+              </div>
             </div>
           </motion.div>
         )}

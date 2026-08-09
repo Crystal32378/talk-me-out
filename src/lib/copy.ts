@@ -140,7 +140,7 @@ export const UI_COPY = {
   intro: {
     kicker: "Persistent fitting room · anti-impulse mode",
     title: "Upload once. Try many.\nDecide what is worth trying for real.",
-    body: "Most virtual try-on tools are designed to help you check out faster. This one is not. Upload one fitting photo, try as many garments as you want — Crystal's Closet or your own — and every look is saved on this device so you can come back, compare, and decide what actually deserves a real fitting room.",
+    body: "Most virtual try-on tools are designed to help you check out faster. This one is not. Upload one fitting photo, try as many garments as you want — Crystal's Closet or your own — and every completed look (try-on plus verdict) is saved on this device so you can come back, compare, and decide what actually deserves a real fitting room.",
     privacy: "Your fitting photo and saved results are stored on this device. New try-ons send the selected photo and garment to YouCam for processing. Talk Me Out of It keeps no account or cloud history. Clear local data anytime.",
     primaryCta: "Begin the interrogation",
     secondaryCta: "How this works",
@@ -230,7 +230,12 @@ export const UI_COPY = {
     cachedExplanation:
       "You have already tried this garment. Showing the saved result from your fitting room so YouCam is not called again.",
     continueCta: "Continue to the interrogation",
-    retryCta: "Try again",
+    tryAnotherCta: "Try another garment",
+    regenerateCta: "Regenerate result",
+    regenerateNote:
+      "Regenerating calls YouCam again to produce a new image for this same garment and photo. Results are often similar.",
+    saveHint:
+      "Complete the interrogation to save this look to My Fitting Room.",
     back: "Back",
     personLabel: "Your photo",
     garmentLabel: "Garment",
@@ -262,9 +267,10 @@ export const UI_COPY = {
     // Binary presentation-layer decision copy
     decisionHeading: "What this means",
     decisionTryIrlShort: "WORTH TRYING IN PERSON",
-    decisionTryIrlLong: "Virtual try-on looks promising and your purchase reasoning holds up. The next honest step is a real fitting room — confirm fit, fabric, and comfort before buying.",
+    decisionTryIrlLong: "Your purchase reasoning holds up. The next honest step is a real fitting room — confirm fit, fabric, and comfort before buying.",
     decisionSkipShort: "SKIP IT",
     decisionSkipLong: "Even if the virtual try-on looks fine, your purchase reasoning is not strong enough to justify the next step. Leave it for now.",
+    savedToFittingRoom: "Saved to My Fitting Room",
     tryAnotherCta: "Try another",
     viewFittingRoomCta: "View my fitting room",
     restartCta: "Interrogate another purchase",
@@ -277,7 +283,7 @@ export const UI_COPY = {
   },
   fittingRoom: {
     heading: "My Fitting Room",
-    body: "Every garment you have tried is saved here on this device. Compare looks, revisit decisions, and see what is actually worth trying in person.",
+    body: "Every completed look — try-on plus verdict — is saved here on this device. Compare looks, revisit decisions, and see what is actually worth trying in person.",
     looksSaved: (n: number) => `${n} ${n === 1 ? "look" : "looks"} saved`,
     progressLabel: (tried: number, total: number) => `${tried} of ${total} tried`,
     triedSection: "Tried",

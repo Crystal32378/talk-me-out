@@ -160,6 +160,7 @@ export function GarmentSelectStep() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
+              className={garment?.isDefault ? "pb-28 sm:pb-0" : undefined}
             >
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {DEFAULT_GARMENTS.map((g) => {
@@ -216,7 +217,7 @@ export function GarmentSelectStep() {
                   ref={selectedPanelRef}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 flex scroll-mb-6 flex-col gap-3 border border-border bg-surface/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="mt-6 hidden scroll-mb-6 flex-col gap-3 border border-border bg-surface/60 p-4 sm:flex sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -237,6 +238,35 @@ export function GarmentSelectStep() {
                     {UI_COPY.garment.continueCta}
                   </button>
                 </motion.div>
+              )}
+
+              {/* Mobile sticky CTA — the desktop panel above is far below
+                  the grid on small screens, so the primary action stays
+                  pinned to the bottom edge. The pb-28 on the tab wrapper
+                  keeps the last garment row scrollable above this bar. */}
+              {garment?.isDefault && (
+                <div
+                  className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-5 pt-3 backdrop-blur sm:hidden"
+                  style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+                >
+                  <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        {UI_COPY.garment.selected}
+                      </div>
+                      <div className="truncate font-display text-sm font-semibold text-foreground">
+                        {garment.name}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep("tryon")}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98]"
+                    >
+                      {UI_COPY.garment.continueCta}
+                    </button>
+                  </div>
+                </div>
               )}
             </motion.div>
           ) : (

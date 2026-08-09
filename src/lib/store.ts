@@ -63,7 +63,8 @@ interface FlowState {
 
   // fitting-room entry management
   getCachedResult: (garmentId: string) => FittingRoomEntry | null;
-  saveCurrentResultToFittingRoom: () => Promise<void>;
+  /** Returns true when the completed look is newly written or already persisted unchanged. */
+  saveCurrentResultToFittingRoom: () => Promise<boolean>;
   deleteSavedResult: (id: string) => Promise<void>;
   loadSavedResultIntoSession: (id: string) => void;
 }
@@ -94,6 +95,27 @@ function clearSession(set: (partial: Partial<FlowState>) => void) {
     currentQuestionIndex: 0,
     verdict: null,
   });
+}
+
+/**
+ * Semantic equality for fitting-room entries. Two entries describe the
+ * same completed look when every field a verdict depends on matches:
+ * the answers, the derived verdict/decision/score, and the try-on image.
+ * `updatedAt` is intentionally excluded — it is bookkeeping, not meaning.
+ * Centralized here so every save path (verdict effect, "Try another",
+ * "View my fitting room") is idempotent by construction.
+ */
+function isSameLook(a: FittingRoomEntry, b: FittingRoomEntry): boolean {
+  return (
+    a.id === b.id &&
+    a.tryOnImage === b.tryOnImage &&
+    a.verdictId === b.verdictId &&
+    a.decision === b.decision &&
+    a.score === b.score &&
+    QUESTIONS.every(
+      (q) => a.answers[q.id as keyof AnswerMap] === b.answers[q.id as keyof AnswerMap],
+    )
+  );
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -263,11 +285,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   saveCurrentResultToFittingRoom: async () => {
     const { garment, tryOn, answers, verdict, savedResults } = get();
-    if (!garment || !tryOn || !verdict) return;
+    if (!garment || !tryOn || !verdict) return false;
     // Don't save fallback results to the fitting room — they aren't real
     // VTO outputs and would mislead the user on revisit. Demo results
     // are also not saved (they aren't tied to the user's actual photo).
-    if (tryOn.fallback || tryOn.demo) return;
+    if (tryOn.fallback || tryOn.demo) return false;
 
     const decision: Decision = toDecision(verdict.verdict.id, verdict.totalScore);
     const entry: FittingRoomEntry = {
@@ -284,10 +306,26 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       decision,
       updatedAt: Date.now(),
     };
-    await db.saveLook(entry);
+
+    // Idempotency: if a semantically identical entry is already saved,
+    // report success without rewriting it — repeated calls (verdict
+    // effect, "Try another", "View my fitting room") must not churn
+    // `updatedAt` or reorder the fitting room.
+    const existing = savedResults.find((r) => r.id === entry.id);
+    if (existing && isSameLook(existing, entry)) return true;
+
+    try {
+      await db.saveLook(entry);
+    } catch {
+      // IndexedDB write failed (private mode, quota, etc.) — report
+      // honestly so the UI never shows a "saved" confirmation for an
+      // entry that was not persisted.
+      return false;
+    }
     // Update in-memory list (replace if already present, else prepend).
     const filtered = savedResults.filter((r) => r.id !== entry.id);
     set({ savedResults: [entry, ...filtered] });
+    return true;
   },
 
   deleteSavedResult: async (id) => {
