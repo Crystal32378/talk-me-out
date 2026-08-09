@@ -256,6 +256,17 @@ export function PhotoUploadStep() {
                   {UI_COPY.photo.usePersistedCta}
                 </button>
               </div>
+
+              {/* Entry to the destructive clear flow. Navigation only —
+                  the actual wipe stays inside My Fitting Room behind the
+                  existing confirmation copy and clearFittingRoom(). */}
+              <button
+                type="button"
+                onClick={() => setStep("fitting-room")}
+                className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+              >
+                {UI_COPY.photo.manageDataCta}
+              </button>
             </motion.div>
           ) : personImage ? (
             <motion.div

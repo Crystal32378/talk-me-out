@@ -179,6 +179,7 @@ export const UI_COPY = {
     persistedHint: "Stored on this device · sent to YouCam only for a new try-on.",
     usePersistedCta: "Use this photo",
     changePersistedCta: "Change photo",
+    manageDataCta: "Manage or clear local data",
     replaceClearsFittingRoom:
       "Changing your fitting photo will permanently clear every saved look because those results belong to the current person. Continue?",
     error: {
