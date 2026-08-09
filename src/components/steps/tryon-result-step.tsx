@@ -320,7 +320,7 @@ export function TryOnResultStep() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-4 sm:gap-5"
           >
             {/* Banner */}
             {showCached && (
@@ -361,9 +361,10 @@ export function TryOnResultStep() {
               </div>
             )}
 
-            <div className="grid gap-5 sm:grid-cols-[2fr,1fr]">
-              {/* Result image */}
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-border bg-card">
+            <div className="grid gap-4 sm:grid-cols-[2fr,1fr] sm:gap-5">
+              {/* Result image — capped on small screens to match the
+                  loading placeholder width and keep the page compact */}
+              <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-border bg-card sm:max-w-none">
                 { }
                 <img
                   src={tryOn.imageUrl}
@@ -408,7 +409,7 @@ export function TryOnResultStep() {
 
                 {/* Product info card */}
                 {garment && (
-                  <div className="border border-border bg-surface/60 p-4">
+                  <div className="border border-border bg-surface/60 p-3 sm:p-4">
                     <div className="text-[10px] uppercase tracking-[0.18em] text-warm-accent">
                       {garment.categoryLabel}
                     </div>

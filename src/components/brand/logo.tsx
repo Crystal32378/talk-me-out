@@ -44,11 +44,11 @@ export function Logo({ size = 40, showTagline = false, className = "" }: LogoPro
         </svg>
       </motion.div>
       <div className="flex flex-col leading-tight">
-        <span className="font-display text-base font-bold tracking-tight text-foreground">
+        <span className="whitespace-nowrap font-display text-base font-bold tracking-tight text-foreground">
           Talk Me Out of It
         </span>
         {showTagline && (
-          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.14em] text-muted-foreground md:text-[10px] md:tracking-[0.18em]">
             Your brutally honest fitting-room friend
           </span>
         )}
