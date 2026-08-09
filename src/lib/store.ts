@@ -63,7 +63,7 @@ interface FlowState {
 
   // fitting-room entry management
   getCachedResult: (garmentId: string) => FittingRoomEntry | null;
-  /** Returns true only when the entry was actually written to IndexedDB. */
+  /** Returns true when the completed look is newly written or already persisted unchanged. */
   saveCurrentResultToFittingRoom: () => Promise<boolean>;
   deleteSavedResult: (id: string) => Promise<void>;
   loadSavedResultIntoSession: (id: string) => void;
