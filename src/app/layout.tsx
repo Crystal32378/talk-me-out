@@ -17,6 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://talk-me-out.vercel.app"),
   title: "Talk Me Out of It — Your brutally honest fitting-room friend",
   description:
     "A virtual fitting room that does not help you buy faster. It helps you decide whether you should buy at all. Powered by YouCam Apparel Virtual Try-On.",
@@ -34,12 +35,21 @@ export const metadata: Metadata = {
     description:
       "Your brutally honest fitting-room friend. Anti-impulse shopping, powered by YouCam Apparel VTO.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Talk Me Out of It — your brutally honest fitting-room friend",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Talk Me Out of It",
     description:
       "Your brutally honest fitting-room friend. Anti-impulse shopping, powered by YouCam Apparel VTO.",
+    images: ["/og-image.png"],
   },
 };
 

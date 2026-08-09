@@ -17,6 +17,7 @@ export function VerdictCardStep() {
   const tryAnotherGarment = useFlowStore((s) => s.tryAnotherGarment);
   const verdict = useFlowStore((s) => s.verdict);
   const garment = useFlowStore((s) => s.garment);
+  const tryOn = useFlowStore((s) => s.tryOn);
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
   const { toast } = useToast();
 
@@ -159,6 +160,28 @@ export function VerdictCardStep() {
         transition={{ duration: 0.5 }}
         className="relative overflow-hidden border border-border bg-surface/60 p-8 text-center"
       >
+        {/* Case garment — keeps the try-on result visible on the verdict */}
+        {(tryOn?.imageUrl || garment) && (
+          <div className="mb-6 flex items-center justify-center gap-3">
+            {tryOn?.imageUrl && (
+              <img
+                src={tryOn.imageUrl}
+                alt={garment?.name ? `Try-on result: ${garment.name}` : "Try-on result"}
+                className="h-16 w-12 rounded-md border border-border object-cover"
+              />
+            )}
+            {garment && (
+              <div className="text-left">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-warm-accent">
+                  {UI_COPY.verdict.caseLabel}
+                </div>
+                <div className="font-display text-sm font-semibold leading-tight text-foreground">
+                  {garment.name}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="mb-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           {UI_COPY.verdict.scoreLabel}
         </div>

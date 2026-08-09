@@ -14,8 +14,8 @@ export function IntroStep() {
     <div className="mx-auto flex min-h-[100svh] max-w-3xl flex-col">
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 py-5">
-        <Logo size={36} />
-        <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <Logo size={36} showTagline />
+        <span className="hidden whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:block">
           {intro.kicker}
         </span>
       </header>

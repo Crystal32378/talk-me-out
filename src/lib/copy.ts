@@ -252,6 +252,7 @@ export const UI_COPY = {
   verdict: {
     headingLabel: "Your verdict",
     scoreLabel: "Impulse score",
+    caseLabel: "The garment in question",
     maxScoreLabel: "out of",
     whyHeading: "Why this verdict",
     roastHeading: "Two cents from the fitting room",
