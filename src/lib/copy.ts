@@ -141,7 +141,7 @@ export const UI_COPY = {
     kicker: "Persistent fitting room · anti-impulse mode",
     title: "Upload once. Try many.\nDecide what is worth trying for real.",
     body: "Most virtual try-on tools are designed to help you check out faster. This one is not. Upload one fitting photo, try as many garments as you want — Crystal's Closet or your own — and every look is saved on this device so you can come back, compare, and decide what actually deserves a real fitting room.",
-    privacy: "Your fitting photo and saved try-on results stay on this device. They are not stored in a Talk Me Out of It account or cloud history. You can clear them at any time.",
+    privacy: "Your fitting photo and saved results are stored on this device. New try-ons send the selected photo and garment to YouCam for processing. Talk Me Out of It keeps no account or cloud history. Clear local data anytime.",
     primaryCta: "Begin the interrogation",
     secondaryCta: "How this works",
     stepsLabel: "The flow",
@@ -155,9 +155,9 @@ export const UI_COPY = {
   },
   photo: {
     heading: "Show us the evidence.",
-    body: "Upload a clear photo. Full-body or half-body works best. You only need to do this once — your fitting photo is saved on this device for next time.",
+    body: "Upload a clear photo. Full-body or half-body works best. It is saved on this device for next time and sent to YouCam only when you start a new try-on.",
     privacy:
-      "Your fitting photo and saved try-on results stay on this device. They are not stored in a Talk Me Out of It account or cloud history. You can clear them at any time.",
+      "Your fitting photo and saved results are stored on this device. New try-ons send the selected photo and garment to YouCam for processing. Talk Me Out of It keeps no account or cloud history. Clear local data anytime.",
     uploadCta: "Upload from device",
     cameraCta: "Take a photo",
     dragHint: "Drag and drop an image here",
@@ -176,9 +176,11 @@ export const UI_COPY = {
       "Headshots (face-only) do not work. The try-on API needs to see your torso so it can place the garment on your body. A face-only photo will produce a broken result.",
     // Persisted-photo UX
     persistedHeading: "Your fitting photo",
-    persistedHint: "Saved only on this device. Clear anytime.",
+    persistedHint: "Stored on this device · sent to YouCam only for a new try-on.",
     usePersistedCta: "Use this photo",
     changePersistedCta: "Change photo",
+    replaceClearsFittingRoom:
+      "Changing your fitting photo will permanently clear every saved look because those results belong to the current person. Continue?",
     error: {
       type: "Unsupported file type. Use JPG, PNG, or WebP.",
       size: "File is too large. Keep it under 10 MB.",
@@ -285,7 +287,7 @@ export const UI_COPY = {
     emptyState: "No looks saved yet. Try a garment to see it here.",
     backCta: "Back",
     backToGarmentCta: "Try another garment",
-    privacyNote: "Your fitting photo and saved try-on results stay on this device. They are not stored in a Talk Me Out of It account or cloud history. You can clear them at any time.",
+    privacyNote: "Your fitting photo and saved results are stored on this device. New try-ons send the selected photo and garment to YouCam for processing. Talk Me Out of It keeps no account or cloud history. Clear local data anytime.",
     decisionBadgeTryIrl: "TRY IN PERSON",
     decisionBadgeSkip: "SKIP",
   },

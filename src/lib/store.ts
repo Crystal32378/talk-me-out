@@ -41,8 +41,7 @@ interface FlowState {
   hydrateFromDB: () => Promise<void>;
 
   // photo
-  setPersonImage: (dataUrl: string | null) => void;
-  setPersistedPersonPhoto: (dataUrl: string) => Promise<void>;
+  setPersonImage: (dataUrl: string | null) => Promise<void>;
 
   // garment
   selectDefaultGarment: (id: string) => void;
@@ -165,21 +164,30 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     });
   },
 
-  setPersonImage: (dataUrl) => {
-    set({ personImage: dataUrl });
-    // Best-effort persist — fire and forget. If IndexedDB is unavailable
-    // (private mode, SSR, etc.) the photo still works for the current
-    // session via the in-memory store.
-    if (dataUrl) {
-      void db.savePersonPhoto(dataUrl);
-    } else {
-      void db.clearPersonPhoto();
-    }
-  },
+  setPersonImage: async (dataUrl) => {
+    const state = get();
+    if (state.personImage === dataUrl) return;
 
-  setPersistedPersonPhoto: async (dataUrl) => {
-    set({ personImage: dataUrl });
-    await db.savePersonPhoto(dataUrl);
+    // Every saved VTO result belongs to the person photo that created it.
+    // Replacing or removing that photo must invalidate those results before
+    // the new photo becomes active; otherwise a garment-only cache key could
+    // show the previous person's generated image.
+    const mustClearLooks = state.savedResults.length > 0;
+    if (mustClearLooks) {
+      await db.clearAll();
+    } else if (!dataUrl) {
+      await db.clearPersonPhoto();
+    }
+
+    if (dataUrl) {
+      await db.savePersonPhoto(dataUrl);
+    }
+
+    clearSession(set);
+    set({
+      personImage: dataUrl,
+      savedResults: mustClearLooks ? [] : state.savedResults,
+    });
   },
 
   selectDefaultGarment: (id) => {
