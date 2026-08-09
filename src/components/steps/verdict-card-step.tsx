@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Sparkles, Shirt, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -17,6 +17,7 @@ export function VerdictCardStep() {
   const tryAnotherGarment = useFlowStore((s) => s.tryAnotherGarment);
   const verdict = useFlowStore((s) => s.verdict);
   const garment = useFlowStore((s) => s.garment);
+  const tryOn = useFlowStore((s) => s.tryOn);
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
   const { toast } = useToast();
 
@@ -25,6 +26,10 @@ export function VerdictCardStep() {
   const [revealedEvidence, setRevealedEvidence] = useState(0);
   const [revealedRoast, setRevealedRoast] = useState(0);
   const [copied, setCopied] = useState(false);
+  // Set only via the explicit "Skip animation" button. Deferred phase
+  // transitions check this flag so a pending timer can never drag the
+  // card back to an earlier phase after the user has skipped ahead.
+  const skippedRef = useRef(false);
 
   // Animate score counting up to the final value.
   // Only when the count reaches the target do we transition to the next phase.
@@ -34,7 +39,9 @@ export function VerdictCardStep() {
     // For score 0, skip the count-up and go straight to done.
     if (target === 0) {
       const t1 = setTimeout(() => setDisplayScore(0), 0);
-      const t2 = setTimeout(() => setPhase("revealing_evidence"), 400);
+      const t2 = setTimeout(() => {
+        if (!skippedRef.current) setPhase("revealing_evidence");
+      }, 400);
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
@@ -47,7 +54,9 @@ export function VerdictCardStep() {
         if (next >= target) {
           clearInterval(interval);
           // Wait a beat after the count-up finishes, then reveal verdict.
-          setTimeout(() => setPhase("revealing_evidence"), 450);
+          setTimeout(() => {
+            if (!skippedRef.current) setPhase("revealing_evidence");
+          }, 450);
         }
         return next;
       });
@@ -68,7 +77,9 @@ export function VerdictCardStep() {
       setRevealedEvidence(i);
       if (i >= verdict.evidence.length) {
         clearInterval(interval);
-        setTimeout(() => setPhase("revealing_roast"), 500);
+        setTimeout(() => {
+          if (!skippedRef.current) setPhase("revealing_roast");
+        }, 500);
       }
     }, 450);
     return () => clearInterval(interval);
@@ -112,6 +123,14 @@ export function VerdictCardStep() {
   const evidenceDone = phase === "revealing_roast" || phase === "showing_note";
   const roastDone = phase === "showing_note";
 
+  const skipAnimation = () => {
+    skippedRef.current = true;
+    setDisplayScore(verdict.totalScore);
+    setRevealedEvidence(verdict.evidence.length);
+    setRevealedRoast(verdict.roastLines.length);
+    setPhase("showing_note");
+  };
+
   const handleCopy = async () => {
     const text = formatVerdictForClipboard(verdict, garment);
     try {
@@ -152,6 +171,21 @@ export function VerdictCardStep() {
         </span>
       </div>
 
+      {/* Explicit escape hatch for the reveal choreography. Kept as a
+          dedicated button (not whole-card click) so it never conflicts
+          with Copy / CTA / Fitting Room actions that appear later. */}
+      {!roastDone && (
+        <div className="mb-2 flex justify-end">
+          <button
+            type="button"
+            onClick={skipAnimation}
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-warm-accent/60 hover:text-foreground"
+          >
+            {UI_COPY.verdict.skipAnimationCta}
+          </button>
+        </div>
+      )}
+
       {/* Score + Stamp */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
@@ -159,6 +193,28 @@ export function VerdictCardStep() {
         transition={{ duration: 0.5 }}
         className="relative overflow-hidden border border-border bg-surface/60 p-8 text-center"
       >
+        {/* Case garment — keeps the try-on result visible on the verdict */}
+        {(tryOn?.imageUrl || garment) && (
+          <div className="mb-6 flex items-center justify-center gap-3">
+            {tryOn?.imageUrl && (
+              <img
+                src={tryOn.imageUrl}
+                alt={garment?.name ? `Try-on result: ${garment.name}` : "Try-on result"}
+                className="h-16 w-12 rounded-md border border-border object-cover"
+              />
+            )}
+            {garment && (
+              <div className="text-left">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-warm-accent">
+                  {UI_COPY.verdict.caseLabel}
+                </div>
+                <div className="font-display text-sm font-semibold leading-tight text-foreground">
+                  {garment.name}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="mb-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           {UI_COPY.verdict.scoreLabel}
         </div>

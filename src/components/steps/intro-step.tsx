@@ -14,8 +14,8 @@ export function IntroStep() {
     <div className="mx-auto flex min-h-[100svh] max-w-3xl flex-col">
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 py-5">
-        <Logo size={36} />
-        <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <Logo size={36} showTagline />
+        <span className="hidden whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:block">
           {intro.kicker}
         </span>
       </header>
@@ -50,9 +50,17 @@ export function IntroStep() {
               {intro.primaryCta}
               <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground sm:ml-3">
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("how-it-works")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              className="text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground sm:ml-3"
+            >
               {intro.secondaryCta}
-            </span>
+            </button>
           </div>
         </motion.div>
 
@@ -61,16 +69,17 @@ export function IntroStep() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          id="how-it-works"
           className="mt-14 border-t border-border pt-8"
         >
           <div className="mb-4 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
             {intro.stepsLabel}
           </div>
-          <ol className="grid grid-cols-1 gap-3 sm:grid-cols-5">
+          <ol className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
             {intro.steps.map((step, idx) => (
               <li
                 key={step.n}
-                className="flex items-center gap-3 border border-border bg-card/40 px-4 py-3 sm:flex-col sm:items-start sm:gap-1"
+                className="flex min-w-[150px] snap-start items-center gap-3 border border-border bg-card/40 px-4 py-3 sm:min-w-0 sm:flex-col sm:items-start sm:gap-1"
               >
                 <span className="font-display text-2xl font-bold text-warm-accent">
                   {String(step.n).padStart(2, "0")}
@@ -100,7 +109,7 @@ export function IntroStep() {
       {/* Footer watermark */}
       <footer className="border-t border-border px-5 py-4">
         <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>退堂鼓 · v1.1</span>
+          <span>Anti-impulse fitting room</span>
           <span>Powered by YouCam Apparel VTO</span>
         </div>
       </footer>

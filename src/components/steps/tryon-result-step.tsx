@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, RefreshCw, ArrowRight, Info } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
@@ -320,7 +320,7 @@ export function TryOnResultStep() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-4 sm:gap-5"
           >
             {/* Banner */}
             {showCached && (
@@ -361,9 +361,10 @@ export function TryOnResultStep() {
               </div>
             )}
 
-            <div className="grid gap-5 sm:grid-cols-[2fr,1fr]">
-              {/* Result image */}
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-border bg-card">
+            <div className="grid gap-4 sm:grid-cols-[2fr,1fr] sm:gap-5">
+              {/* Result image — capped on small screens to match the
+                  loading placeholder width and keep the page compact */}
+              <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg border border-border bg-card sm:max-w-none">
                 { }
                 <img
                   src={tryOn.imageUrl}
@@ -408,7 +409,7 @@ export function TryOnResultStep() {
 
                 {/* Product info card */}
                 {garment && (
-                  <div className="border border-border bg-surface/60 p-4">
+                  <div className="border border-border bg-surface/60 p-3 sm:p-4">
                     <div className="text-[10px] uppercase tracking-[0.18em] text-warm-accent">
                       {garment.categoryLabel}
                     </div>
@@ -430,12 +431,6 @@ export function TryOnResultStep() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="flex items-start gap-2 border border-border bg-surface/40 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-warm-accent" />
-              <span>{UI_COPY.tryon.body}</span>
             </div>
 
             {/* Error context */}

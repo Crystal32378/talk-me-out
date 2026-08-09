@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, RefreshCw, ImageIcon, ShieldCheck, AlertCircle, AlertTriangle, User } from "lucide-react";
 import { StepHeader } from "./step-header";
@@ -16,6 +16,27 @@ async function fileToDataUrl(file: File): Promise<string> {
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = () => reject(new Error("read-failed"));
     reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Measure a photo's dimensions and flag likely face-only headshots.
+ * A half-body / full-body photo is typically clearly taller than wide
+ * (aspect ratio below 0.85). A face-only headshot is roughly square
+ * (0.85–1.2). Clearly landscape photos (1.2 and above) are treated as
+ * normal so wide shots are never mislabeled as headshots.
+ */
+function measurePhoto(
+  dataUrl: string,
+): Promise<{ w: number; h: number; headshot: boolean } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const ratio = img.width / img.height;
+      resolve({ w: img.width, h: img.height, headshot: ratio > 0.85 && ratio < 1.2 });
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
   });
 }
 
@@ -58,21 +79,10 @@ export function PhotoUploadStep() {
         if (dataUrl !== personImage && !confirmPhotoReplacement()) return;
         await setPersonImage(dataUrl);
         setShowUploader(false);
-        // Check dimensions for headshot heuristic.
-        const img = new Image();
-        img.onload = () => {
-          setImageDimensions({ w: img.width, h: img.height });
-          // A half-body / full-body photo is typically taller than wide
-          // (aspect ratio < 0.9). A face-only headshot is roughly square
-          // (aspect ratio between 0.85 and 1.15).
-          const ratio = img.width / img.height;
-          setHeadshotLikely(ratio > 0.85 && ratio < 1.2);
-        };
-        img.onerror = () => {
-          setImageDimensions(null);
-          setHeadshotLikely(false);
-        };
-        img.src = dataUrl;
+        // Check dimensions for the headshot heuristic.
+        const measured = await measurePhoto(dataUrl);
+        setImageDimensions(measured ? { w: measured.w, h: measured.h } : null);
+        setHeadshotLikely(measured?.headshot ?? false);
       } catch {
         setError(UI_COPY.photo.error.capture);
       }
@@ -151,6 +161,23 @@ export function PhotoUploadStep() {
     setShowUploader(true);
   }, [confirmPhotoReplacement, personImage, setPersonImage]);
 
+  // Re-measure a photo restored from IndexedDB. After a reload there is no
+  // in-memory dimension data, so the headshot heuristic must re-run from
+  // the persisted data URL — otherwise the persisted view could neither
+  // warn on a real headshot nor guarantee a normal photo is not mislabeled.
+  useEffect(() => {
+    if (!personImage || imageDimensions) return;
+    let cancelled = false;
+    void measurePhoto(personImage).then((measured) => {
+      if (cancelled || !measured) return;
+      setImageDimensions({ w: measured.w, h: measured.h });
+      setHeadshotLikely(measured.headshot);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [personImage, imageDimensions]);
+
   return (
     <div className="mx-auto flex min-h-[100svh] max-w-3xl flex-col px-5 py-8">
       <StepHeader
@@ -188,10 +215,24 @@ export function PhotoUploadStep() {
                   alt="Your saved fitting photo"
                   className="aspect-[3/4] w-full object-cover"
                 />
-                <div className="absolute left-3 top-3 border border-[#30d158]/60 bg-black/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[#30d158] backdrop-blur">
-                  On this device
-                </div>
+                {headshotLikely ? (
+                  <div className="absolute left-3 top-3 flex items-center gap-1.5 border border-[#ff3b30]/70 bg-[#ff3b30]/20 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[#ff5147] backdrop-blur">
+                    <AlertTriangle className="h-3 w-3" />
+                    Looks like a headshot
+                  </div>
+                ) : (
+                  <div className="absolute left-3 top-3 border border-[#30d158]/60 bg-black/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[#30d158] backdrop-blur">
+                    On this device
+                  </div>
+                )}
               </div>
+
+              {headshotLikely && (
+                <div className="max-w-sm rounded-md border border-[#ff3b30]/40 bg-[#ff3b30]/10 px-4 py-3 text-xs leading-relaxed text-[#ff5147]">
+                  <strong className="mb-1 block uppercase tracking-[0.16em]">Headshot warning</strong>
+                  {UI_COPY.photo.headshotWarning}
+                </div>
+              )}
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
@@ -215,6 +256,17 @@ export function PhotoUploadStep() {
                   {UI_COPY.photo.usePersistedCta}
                 </button>
               </div>
+
+              {/* Entry to the destructive clear flow. Navigation only —
+                  the actual wipe stays inside My Fitting Room behind the
+                  existing confirmation copy and clearFittingRoom(). */}
+              <button
+                type="button"
+                onClick={() => setStep("fitting-room")}
+                className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+              >
+                {UI_COPY.photo.manageDataCta}
+              </button>
             </motion.div>
           ) : personImage ? (
             <motion.div

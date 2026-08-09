@@ -179,6 +179,7 @@ export const UI_COPY = {
     persistedHint: "Stored on this device · sent to YouCam only for a new try-on.",
     usePersistedCta: "Use this photo",
     changePersistedCta: "Change photo",
+    manageDataCta: "Manage or clear local data",
     replaceClearsFittingRoom:
       "Changing your fitting photo will permanently clear every saved look because those results belong to the current person. Continue?",
     error: {
@@ -252,6 +253,7 @@ export const UI_COPY = {
   verdict: {
     headingLabel: "Your verdict",
     scoreLabel: "Impulse score",
+    caseLabel: "The garment in question",
     maxScoreLabel: "out of",
     whyHeading: "Why this verdict",
     roastHeading: "Two cents from the fitting room",
@@ -267,6 +269,7 @@ export const UI_COPY = {
     viewFittingRoomCta: "View my fitting room",
     restartCta: "Interrogate another purchase",
     copyCta: "Copy verdict",
+    skipAnimationCta: "Skip animation",
     copied: "Verdict copied to clipboard",
     shareHeading: "Talk Me Out of It",
     shareTagline: "Your brutally honest fitting-room friend.",
