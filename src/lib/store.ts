@@ -63,7 +63,8 @@ interface FlowState {
 
   // fitting-room entry management
   getCachedResult: (garmentId: string) => FittingRoomEntry | null;
-  saveCurrentResultToFittingRoom: () => Promise<void>;
+  /** Returns true only when the entry was actually written to IndexedDB. */
+  saveCurrentResultToFittingRoom: () => Promise<boolean>;
   deleteSavedResult: (id: string) => Promise<void>;
   loadSavedResultIntoSession: (id: string) => void;
 }
@@ -263,11 +264,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   saveCurrentResultToFittingRoom: async () => {
     const { garment, tryOn, answers, verdict, savedResults } = get();
-    if (!garment || !tryOn || !verdict) return;
+    if (!garment || !tryOn || !verdict) return false;
     // Don't save fallback results to the fitting room — they aren't real
     // VTO outputs and would mislead the user on revisit. Demo results
     // are also not saved (they aren't tied to the user's actual photo).
-    if (tryOn.fallback || tryOn.demo) return;
+    if (tryOn.fallback || tryOn.demo) return false;
 
     const decision: Decision = toDecision(verdict.verdict.id, verdict.totalScore);
     const entry: FittingRoomEntry = {
@@ -284,10 +285,18 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       decision,
       updatedAt: Date.now(),
     };
-    await db.saveLook(entry);
+    try {
+      await db.saveLook(entry);
+    } catch {
+      // IndexedDB write failed (private mode, quota, etc.) — report
+      // honestly so the UI never shows a "saved" confirmation for an
+      // entry that was not persisted.
+      return false;
+    }
     // Update in-memory list (replace if already present, else prepend).
     const filtered = savedResults.filter((r) => r.id !== entry.id);
     set({ savedResults: [entry, ...filtered] });
+    return true;
   },
 
   deleteSavedResult: async (id) => {

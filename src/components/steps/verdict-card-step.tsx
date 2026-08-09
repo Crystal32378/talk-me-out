@@ -19,6 +19,7 @@ export function VerdictCardStep() {
   const garment = useFlowStore((s) => s.garment);
   const tryOn = useFlowStore((s) => s.tryOn);
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
+  const getCachedResult = useFlowStore((s) => s.getCachedResult);
   const { toast } = useToast();
 
   const [displayScore, setDisplayScore] = useState(0);
@@ -26,6 +27,10 @@ export function VerdictCardStep() {
   const [revealedEvidence, setRevealedEvidence] = useState(0);
   const [revealedRoast, setRevealedRoast] = useState(0);
   const [copied, setCopied] = useState(false);
+  // True only after the current look has verifiably been written to
+  // IndexedDB (or an identical entry already exists there). Gates the
+  // "Saved to My Fitting Room" confirmation chip.
+  const [savedToRoom, setSavedToRoom] = useState(false);
   // Set only via the explicit "Skip animation" button. Deferred phase
   // transitions check this flag so a pending timer can never drag the
   // card back to an earlier phase after the user has skipped ahead.
@@ -63,6 +68,32 @@ export function VerdictCardStep() {
     }, 90);
     return () => clearInterval(interval);
   }, [verdict]);
+
+  // Persist the completed look once the verdict exists. The chip is only
+  // shown after the IndexedDB write actually succeeds (store returns
+  // true) — never for demo / fallback / incomplete flows, which the
+  // store refuses to save. If an identical entry is already in the
+  // fitting room (revisit path), show the chip without rewriting it.
+  useEffect(() => {
+    if (!verdict || !garment || !tryOn) return;
+    if (tryOn.demo || tryOn.fallback) return;
+    const cached = getCachedResult(garment.id);
+    if (
+      cached &&
+      cached.score === verdict.totalScore &&
+      cached.tryOnImage === tryOn.imageUrl
+    ) {
+      const t = setTimeout(() => setSavedToRoom(true), 0);
+      return () => clearTimeout(t);
+    }
+    let cancelled = false;
+    void saveCurrentResultToFittingRoom().then((ok) => {
+      if (!cancelled && ok) setSavedToRoom(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [verdict, garment?.id, tryOn?.imageUrl, tryOn?.demo, tryOn?.fallback]);
 
   // Stagger evidence reveal — only after score animation completes.
   useEffect(() => {
@@ -408,6 +439,25 @@ export function VerdictCardStep() {
               {verdict.constructiveNote}
             </p>
           </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Saved confirmation — appears only after the look has verifiably
+          been written to IndexedDB. Clickable: opens My Fitting Room. */}
+      <AnimatePresence>
+        {roastDone && savedToRoom && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            onClick={() => setStep("fitting-room")}
+            className="mt-4 inline-flex items-center gap-2 self-start rounded-md border border-[#30d158]/50 bg-[#30d158]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#30d158] transition-colors hover:bg-[#30d158]/20"
+          >
+            <Check className="h-3.5 w-3.5" />
+            {UI_COPY.verdict.savedToFittingRoom}
+            <ArrowRight className="h-3 w-3" />
+          </motion.button>
         )}
       </AnimatePresence>
 

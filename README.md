@@ -40,7 +40,7 @@ The underlying 4-verdict deterministic engine is unchanged. At the presentation 
 
 | Score | Original verdict(s) | Binary decision | Meaning |
 |-------|---------------------|-----------------|--------|
-| 0–7   | BUY IT, TRY IN STORE | **WORTH TRYING IN PERSON** | Virtual try-on looks promising AND purchase reasoning holds up — worth a real fitting room visit. |
+| 0–7   | BUY IT, TRY IN STORE | **WORTH TRYING IN PERSON** | Purchase reasoning holds up — the honest next step is a real fitting room to confirm fit, fabric, and comfort. |
 | 8–19  | BORROW OR RENT, WALK AWAY | **SKIP IT** | Purchase reasoning is not strong enough to justify further time or money, regardless of how the garment looks. |
 
 The original 4-verdict label, score, evidence, and constructive note are still shown in the verdict detail view — the binary decision is a presentation overlay, not a replacement of the engine.

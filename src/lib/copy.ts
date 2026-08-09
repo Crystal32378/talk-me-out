@@ -230,7 +230,10 @@ export const UI_COPY = {
     cachedExplanation:
       "You have already tried this garment. Showing the saved result from your fitting room so YouCam is not called again.",
     continueCta: "Continue to the interrogation",
-    retryCta: "Try again",
+    tryAnotherCta: "Try another garment",
+    regenerateCta: "Regenerate result",
+    regenerateNote:
+      "Regenerating calls YouCam again to produce a new image for this same garment and photo. Results are often similar.",
     back: "Back",
     personLabel: "Your photo",
     garmentLabel: "Garment",
@@ -262,9 +265,10 @@ export const UI_COPY = {
     // Binary presentation-layer decision copy
     decisionHeading: "What this means",
     decisionTryIrlShort: "WORTH TRYING IN PERSON",
-    decisionTryIrlLong: "Virtual try-on looks promising and your purchase reasoning holds up. The next honest step is a real fitting room — confirm fit, fabric, and comfort before buying.",
+    decisionTryIrlLong: "Your purchase reasoning holds up. The next honest step is a real fitting room — confirm fit, fabric, and comfort before buying.",
     decisionSkipShort: "SKIP IT",
     decisionSkipLong: "Even if the virtual try-on looks fine, your purchase reasoning is not strong enough to justify the next step. Leave it for now.",
+    savedToFittingRoom: "Saved to My Fitting Room",
     tryAnotherCta: "Try another",
     viewFittingRoomCta: "View my fitting room",
     restartCta: "Interrogate another purchase",
