@@ -50,9 +50,17 @@ export function IntroStep() {
               {intro.primaryCta}
               <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground sm:ml-3">
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("how-it-works")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              className="text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground sm:ml-3"
+            >
               {intro.secondaryCta}
-            </span>
+            </button>
           </div>
         </motion.div>
 
@@ -61,6 +69,7 @@ export function IntroStep() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          id="how-it-works"
           className="mt-14 border-t border-border pt-8"
         >
           <div className="mb-4 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
@@ -100,7 +109,7 @@ export function IntroStep() {
       {/* Footer watermark */}
       <footer className="border-t border-border px-5 py-4">
         <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>退堂鼓 · v1.1</span>
+          <span>Anti-impulse fitting room</span>
           <span>Powered by YouCam Apparel VTO</span>
         </div>
       </footer>

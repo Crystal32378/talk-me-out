@@ -275,9 +275,9 @@ export function FittingRoomStep() {
                   <img
                     src={g.imageUrl}
                     alt={g.name}
-                    className="h-full w-full object-cover opacity-70 transition-opacity group-hover:opacity-100"
+                    className="h-full w-full object-cover opacity-90 transition-opacity sm:opacity-70 sm:group-hover:opacity-100"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <span className="rounded-md bg-[#ff3b30] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
                       {UI_COPY.fittingRoom.tryThisCta}
                     </span>

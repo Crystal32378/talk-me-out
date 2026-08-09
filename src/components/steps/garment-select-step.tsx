@@ -38,6 +38,19 @@ export function GarmentSelectStep() {
   const [customCare, setCustomCare] = useState("");
   const [customType, setCustomType] = useState<GarmentType>("Top");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const handleSelectDefault = (id: string) => {
+    selectDefaultGarment(id);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        selectedPanelRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
+    });
+  };
 
   const handleImage = async (file: File | undefined) => {
     setError(null);
@@ -87,20 +100,20 @@ export function GarmentSelectStep() {
       />
 
       {/* My Fitting Room entry — visible whenever at least one look is saved */}
-      <div className="mb-6 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setStep("fitting-room")}
-          className="inline-flex items-center gap-2 rounded-md border border-warm-accent/60 bg-warm-accent/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-warm-accent transition-colors hover:bg-warm-accent/10"
-        >
-          {UI_COPY.garment.fittingRoomCta}
-          {savedResults.length > 0 && (
+      {savedResults.length > 0 && (
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setStep("fitting-room")}
+            className="inline-flex items-center gap-2 rounded-md border border-warm-accent/60 bg-warm-accent/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-warm-accent transition-colors hover:bg-warm-accent/10"
+          >
+            {UI_COPY.garment.fittingRoomCta}
             <span className="rounded-full bg-warm-accent/20 px-2 py-0.5 text-[10px] tracking-[0.14em]">
               {savedResults.length} SAVED
             </span>
-          )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
 
       {/* Collection attribution */}
       <div className="mb-6 flex flex-col gap-1 border-l-2 border-warm-accent/60 pl-3">
@@ -156,7 +169,7 @@ export function GarmentSelectStep() {
                     <button
                       key={g.id}
                       type="button"
-                      onClick={() => selectDefaultGarment(g.id)}
+                      onClick={() => handleSelectDefault(g.id)}
                       className={`group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left transition-all ${
                         selected
                           ? "border-warm-accent ring-1 ring-warm-accent"
@@ -200,6 +213,7 @@ export function GarmentSelectStep() {
 
               {garment && (
                 <motion.div
+                  ref={selectedPanelRef}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-6 flex flex-col gap-3 border border-border bg-surface/60 p-4 sm:flex-row sm:items-center sm:justify-between"

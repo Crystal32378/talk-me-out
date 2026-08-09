@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, RefreshCw, ArrowRight, Info } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
@@ -430,12 +430,6 @@ export function TryOnResultStep() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="flex items-start gap-2 border border-border bg-surface/40 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-warm-accent" />
-              <span>{UI_COPY.tryon.body}</span>
             </div>
 
             {/* Error context */}
