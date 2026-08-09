@@ -75,11 +75,11 @@ export function IntroStep() {
           <div className="mb-4 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
             {intro.stepsLabel}
           </div>
-          <ol className="grid grid-cols-1 gap-3 sm:grid-cols-5">
+          <ol className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
             {intro.steps.map((step, idx) => (
               <li
                 key={step.n}
-                className="flex items-center gap-3 border border-border bg-card/40 px-4 py-3 sm:flex-col sm:items-start sm:gap-1"
+                className="flex min-w-[150px] snap-start items-center gap-3 border border-border bg-card/40 px-4 py-3 sm:min-w-0 sm:flex-col sm:items-start sm:gap-1"
               >
                 <span className="font-display text-2xl font-bold text-warm-accent">
                   {String(step.n).padStart(2, "0")}

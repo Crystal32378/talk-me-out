@@ -216,7 +216,7 @@ export function GarmentSelectStep() {
                   ref={selectedPanelRef}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 flex flex-col gap-3 border border-border bg-surface/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="mt-6 flex scroll-mb-6 flex-col gap-3 border border-border bg-surface/60 p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
