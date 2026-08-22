@@ -238,6 +238,7 @@ export function TryOnResultStep() {
       });
       const data = (await res.json()) as {
         ok: boolean;
+        mode?: "live" | "demo";
         imageUrl?: string;
         demo?: boolean;
         fallback?: boolean;
@@ -255,9 +256,11 @@ export function TryOnResultStep() {
           fallback: !!data.fallback,
           unitsUsed: data.unitsUsed,
         };
-        // Only a REAL successful generation consumes a credit — demo,
-        // fallback, API failures and timeouts are free by design.
-        if (!result.demo && !result.fallback) {
+        // Only a mode:"live" successful generation consumes a credit and
+        // counts as real try-on traction — demo, fallback, API failures
+        // and timeouts are free AND never pollute the Dora evidence.
+        // (Belt and suspenders: the legacy flags must agree with mode.)
+        if (data.mode === "live" && !result.demo && !result.fallback) {
           consumeTryOn();
           track("successful_tryon", {
             garment: garment.isDefault ? garment.id : "custom",

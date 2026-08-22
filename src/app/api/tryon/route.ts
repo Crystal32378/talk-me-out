@@ -41,6 +41,8 @@ export const maxDuration = 60;
  * Response (JSON):
  *   {
  *     ok: boolean,
+ *     mode: "live" | "demo",   // live = fresh YouCam generation; ONLY live
+ *                              // consumes quota / counts as try-on traction
  *     imageUrl: string,        // data URL of the generated try-on
  *     demo: boolean,           // true if demo mode (NOT a real YouCam result)
  *     fallback: boolean,       // true if even demo compositing failed
@@ -248,6 +250,7 @@ export async function POST(req: NextRequest) {
           if (demo.ok) {
             return NextResponse.json({
               ok: true,
+              mode: "demo",
               imageUrl: demo.imageUrl,
               demo: true,
               fallback: false,
@@ -255,12 +258,12 @@ export async function POST(req: NextRequest) {
             });
           }
           return NextResponse.json(
-            { ok: false, error: "quota-exhausted", fallback: true },
+            { ok: false, mode: "demo", error: "quota-exhausted", fallback: true },
             { status: 429 },
           );
         }
         return NextResponse.json(
-          { ok: false, error: "user-quota", fallback: true },
+          { ok: false, mode: "demo", error: "user-quota", fallback: true },
           { status: 429 },
         );
       }
@@ -289,6 +292,7 @@ export async function POST(req: NextRequest) {
         const elapsed = Date.now() - tStart;
         return NextResponse.json({
           ok: true,
+          mode: "live",
           imageUrl: await compressResponseDataUrl(result.imageUrl),
           demo: false,
           fallback: false,
@@ -309,6 +313,7 @@ export async function POST(req: NextRequest) {
         if (demo.ok) {
           return NextResponse.json({
             ok: true,
+            mode: "demo",
             imageUrl: demo.imageUrl,
             demo: true,
             fallback: false,
@@ -317,6 +322,7 @@ export async function POST(req: NextRequest) {
         }
         return NextResponse.json({
           ok: false,
+          mode: "demo",
           error: code,
           fallback: true,
         });
@@ -328,6 +334,7 @@ export async function POST(req: NextRequest) {
     if (demo.ok) {
       return NextResponse.json({
         ok: true,
+        mode: "demo",
         imageUrl: demo.imageUrl,
         demo: true,
         fallback: false,
@@ -335,12 +342,13 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({
       ok: false,
+      mode: "demo",
       error: "demo-failed",
       fallback: true,
     });
   } catch {
     return NextResponse.json(
-      { ok: false, error: "server", fallback: true },
+      { ok: false, mode: "demo", error: "server", fallback: true },
       { status: 500 },
     );
   }

@@ -26,8 +26,39 @@ const EVENTS = new Set([
   "feedback",
 ]);
 
+/**
+ * Unique-user sets (SADD/SCARD) — Dora evidence needs "number of users",
+ * not just event counts. Keyed by the anonymous device id.
+ * successful_tryon only ever fires for mode:"live" generations (the
+ * client gates on the server's mode field), so unique_tryon_users can
+ * never be inflated by demo/fallback traffic.
+ */
+const UNIQUE_SETS: Record<string, string> = {
+  visitor: "tmoi:uniq:visitors",
+  successful_tryon: "tmoi:uniq:tryon_users",
+  feedback: "tmoi:uniq:feedback_users",
+  referral_open: "tmoi:uniq:referred_visitors",
+};
+
 const MAX_BODY = 2_048;
 const ID_PATTERN = /^[a-z0-9-]{1,32}$/i;
+
+// In-memory mirror for development/smoke tests ONLY. Per serverless
+// instance, wiped on restart — NOT production-safe. Production requires
+// Upstash Redis (see deployment guardrail in .env.example).
+const memCounts = new Map<string, number>();
+const memSets = new Map<string, Set<string>>();
+
+function memRecord(event: string, day: string, anonId: string): void {
+  memCounts.set(`${event}`, (memCounts.get(`${event}`) ?? 0) + 1);
+  memCounts.set(`${event}:${day}`, (memCounts.get(`${event}:${day}`) ?? 0) + 1);
+  const setKey = UNIQUE_SETS[event];
+  if (setKey) {
+    const set = memSets.get(setKey) ?? new Set<string>();
+    set.add(anonId);
+    memSets.set(setKey, set);
+  }
+}
 
 interface EventPayload {
   event: string;
@@ -96,6 +127,10 @@ export async function POST(req: NextRequest) {
     ["LPUSH", "tmoi:log", record],
     ["LTRIM", "tmoi:log", "0", "4999"],
   ];
+  const setKey = UNIQUE_SETS[payload.event];
+  if (setKey) {
+    commands.push(["SADD", setKey, payload.anonId]);
+  }
   if (payload.event === "referral_open" && payload.ref) {
     commands.push(["INCR", `tmoi:ref:${payload.ref}`]);
   }
@@ -105,7 +140,8 @@ export async function POST(req: NextRequest) {
 
   const stored = await redisPipeline(commands);
   if (!stored) {
-    // Log-drain fallback — still recoverable from Vercel logs.
+    // Dev fallback: in-memory mirror + log drain (recoverable from logs).
+    memRecord(payload.event, day, payload.anonId);
     console.log("[tmoi-event]", record);
   }
 
@@ -113,25 +149,49 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Funnel snapshot: total + today per event. Requires the Redis sink; the
- * numbers are anonymous aggregates, so exposing them is harmless — and
- * during Dora judging they double as public traction evidence.
+ * Funnel snapshot: total + today per event, plus the unique-user numbers
+ * Dora evidence actually needs (e.g. "73 unique visitors, 58 unique real
+ * try-on users, 21 shares, 14 unique referred visitors, 34 unique
+ * feedback users"). Anonymous aggregates only.
+ *
+ * backend:"redis" is the production truth. backend:"memory" is the
+ * per-instance dev fallback — never cite those numbers as evidence.
  */
 export async function GET() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
-    return NextResponse.json(
-      { ok: false, reason: "no-storage-configured" },
-      { status: 501 },
-    );
-  }
   const day = new Date().toISOString().slice(0, 10);
   const names = [...EVENTS];
-  const commands = names.flatMap((e) => [
-    ["GET", `tmoi:count:${e}`],
-    ["GET", `tmoi:count:${e}:${day}`],
-  ]);
+  const uniqueNames: Array<[string, string]> = [
+    ["unique_visitors", UNIQUE_SETS.visitor],
+    ["unique_tryon_users", UNIQUE_SETS.successful_tryon],
+    ["unique_feedback_users", UNIQUE_SETS.feedback],
+    ["unique_referred_visitors", UNIQUE_SETS.referral_open],
+  ];
+
+  if (!url || !token) {
+    // Dev-only view of the in-memory mirror, clearly labeled.
+    const funnel: Record<string, { total: number; today: number }> = {};
+    for (const e of names) {
+      funnel[e] = {
+        total: memCounts.get(e) ?? 0,
+        today: memCounts.get(`${e}:${day}`) ?? 0,
+      };
+    }
+    const unique: Record<string, number> = {};
+    for (const [label, key] of uniqueNames) {
+      unique[label] = memSets.get(key)?.size ?? 0;
+    }
+    return NextResponse.json({ ok: true, backend: "memory", day, funnel, unique });
+  }
+
+  const commands = [
+    ...names.flatMap((e) => [
+      ["GET", `tmoi:count:${e}`],
+      ["GET", `tmoi:count:${e}:${day}`],
+    ]),
+    ...uniqueNames.map(([, key]) => ["SCARD", key]),
+  ];
   try {
     const res = await fetch(`${url}/pipeline`, {
       method: "POST",
@@ -143,7 +203,7 @@ export async function GET() {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("pipeline-failed");
-    const data = (await res.json()) as Array<{ result: string | null }>;
+    const data = (await res.json()) as Array<{ result: string | number | null }>;
     const funnel: Record<string, { total: number; today: number }> = {};
     names.forEach((e, i) => {
       funnel[e] = {
@@ -151,7 +211,11 @@ export async function GET() {
         today: Number(data[i * 2 + 1]?.result ?? 0),
       };
     });
-    return NextResponse.json({ ok: true, day, funnel });
+    const unique: Record<string, number> = {};
+    uniqueNames.forEach(([label], i) => {
+      unique[label] = Number(data[names.length * 2 + i]?.result ?? 0);
+    });
+    return NextResponse.json({ ok: true, backend: "redis", day, funnel, unique });
   } catch {
     return NextResponse.json({ ok: false }, { status: 502 });
   }
