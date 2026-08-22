@@ -33,13 +33,31 @@ interface CreditState {
 }
 
 function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof localStorage !== "undefined";
+  return typeof window !== "undefined";
+}
+
+function safeGet(key: string): string | null {
+  if (!isBrowser()) return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSet(key: string, value: string): boolean {
+  if (!isBrowser()) return false;
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function readJSON<T>(key: string): T | null {
-  if (!isBrowser()) return null;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = safeGet(key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
@@ -47,12 +65,7 @@ function readJSON<T>(key: string): T | null {
 }
 
 function writeJSON(key: string, value: unknown): void {
-  if (!isBrowser()) return;
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Private mode / quota — degrade silently; credits become session-only.
-  }
+  safeSet(key, JSON.stringify(value));
 }
 
 function notifyCreditsChanged(): void {
@@ -61,14 +74,10 @@ function notifyCreditsChanged(): void {
 
 export function getAnonId(): string {
   if (!isBrowser()) return "server";
-  let id = localStorage.getItem(LS_ANON);
+  let id = safeGet(LS_ANON);
   if (!id) {
     id = Math.random().toString(36).slice(2, 12);
-    try {
-      localStorage.setItem(LS_ANON, id);
-    } catch {
-      // Fall through with the in-memory id for this session.
-    }
+    safeSet(LS_ANON, id);
   }
   return id;
 }
@@ -113,17 +122,13 @@ export function consumeTryOn(): void {
  */
 export function grantShareBonus(): number {
   if (!isBrowser()) return 0;
-  if (localStorage.getItem(LS_BONUS_USED)) return 0;
+  if (safeGet(LS_BONUS_USED)) return 0;
   const s = getCreditState();
   const nextGranted = Math.min(HARD_CAP, s.granted + SHARE_BONUS);
   const added = nextGranted - s.granted;
   if (added > 0) {
     writeJSON(LS_CREDITS, { ...s, granted: nextGranted });
-    try {
-      localStorage.setItem(LS_BONUS_USED, "1");
-    } catch {
-      // ignore — the cap still prevents repeat minting
-    }
+    safeSet(LS_BONUS_USED, "1");
     notifyCreditsChanged();
   }
   return added;
@@ -141,31 +146,22 @@ export function captureAttribution(): { ref: string | null; src: string | null; 
   const own = getAnonId();
 
   let isNewRef = false;
-  if (incomingRef && incomingRef !== own && !localStorage.getItem(LS_REF)) {
-    try {
-      localStorage.setItem(LS_REF, incomingRef);
-      isNewRef = true;
-    } catch {
-      // ignore
-    }
+  if (incomingRef && incomingRef !== own && !safeGet(LS_REF)) {
+    isNewRef = safeSet(LS_REF, incomingRef);
   }
-  if (incomingSrc && !localStorage.getItem(LS_SRC)) {
-    try {
-      localStorage.setItem(LS_SRC, incomingSrc);
-    } catch {
-      // ignore
-    }
+  if (incomingSrc && !safeGet(LS_SRC)) {
+    safeSet(LS_SRC, incomingSrc);
   }
   return {
-    ref: localStorage.getItem(LS_REF),
-    src: localStorage.getItem(LS_SRC),
+    ref: safeGet(LS_REF),
+    src: safeGet(LS_SRC),
     isNewRef,
   };
 }
 
 export function getAttribution(): { ref: string | null; src: string | null } {
   if (!isBrowser()) return { ref: null, src: null };
-  return { ref: localStorage.getItem(LS_REF), src: localStorage.getItem(LS_SRC) };
+  return { ref: safeGet(LS_REF), src: safeGet(LS_SRC) };
 }
 
 /** Referral link this device hands to friends. */

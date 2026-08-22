@@ -17,6 +17,25 @@ import { buildVerdict } from "./verdict-engine";
 import { toDecision } from "./decisions";
 import * as db from "./fitting-room-db";
 
+const HYDRATION_TIMEOUT_MS = 2_000;
+
+async function withTimeout<T>(task: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      task,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("IndexedDB hydration timed out")),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 interface FlowState {
   step: Step;
   personImage: string | null; // data URL — also persisted to IndexedDB
@@ -176,10 +195,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   hydrateFromDB: async () => {
     if (get().hydrated) return;
     try {
-      const [person, looks] = await Promise.all([
-        db.loadPersonPhoto(),
-        db.loadAllLooks(),
-      ]);
+      const [person, looks] = await withTimeout(
+        Promise.all([db.loadPersonPhoto(), db.loadAllLooks()]),
+        HYDRATION_TIMEOUT_MS,
+      );
       set({
         personImage: person?.dataUrl ?? null,
         savedResults: looks,
