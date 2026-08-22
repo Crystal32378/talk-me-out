@@ -43,8 +43,10 @@ export interface QuotaRejected {
 }
 
 async function redis(commands: string[][]): Promise<Array<{ result: unknown }> | null> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   if (!url || !token) return null;
   try {
     const res = await fetch(`${url}/pipeline`, {
@@ -123,7 +125,7 @@ export async function reserveGeneration(
   if (!warnedNoRedis) {
     warnedNoRedis = true;
     console.warn(
-      "[tmoi-quota] UPSTASH_REDIS_REST_URL not configured — global quota is per-instance only.",
+      "[tmoi-quota] Redis REST credentials not configured — global quota is per-instance only.",
     );
   }
   const globalCount = memIncr(GLOBAL_KEY);

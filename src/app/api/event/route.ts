@@ -7,9 +7,9 @@ export const runtime = "nodejs";
  *
  *   visitor → successful_tryon → share → bonus_unlocked → referral_open → feedback
  *
- * Storage: Upstash Redis via REST when UPSTASH_REDIS_REST_URL/TOKEN are
- * configured; otherwise events land in the deployment log (still countable
- * for a hackathon). Deliberately NOT an analytics platform — six counters
+ * Storage: Upstash Redis via REST when either direct Upstash credentials or
+ * Vercel Marketplace KV_REST_API_URL/TOKEN credentials are configured;
+ * otherwise events land in the deployment log. Deliberately NOT an analytics platform — six counters
  * and a short recent-event log are all the loop needs.
  *
  * Privacy: accepts only whitelisted event names, a random device id, a
@@ -70,8 +70,10 @@ interface EventPayload {
 }
 
 async function redisPipeline(commands: string[][]): Promise<boolean> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   if (!url || !token) return false;
   try {
     const res = await fetch(`${url}/pipeline`, {
@@ -158,8 +160,10 @@ export async function POST(req: NextRequest) {
  * per-instance dev fallback — never cite those numbers as evidence.
  */
 export async function GET() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   const day = new Date().toISOString().slice(0, 10);
   const names = [...EVENTS];
   const uniqueNames: Array<[string, string]> = [
