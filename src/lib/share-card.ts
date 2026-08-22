@@ -148,7 +148,27 @@ async function copyText(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    return false;
+    // Firefox can reject Clipboard API writes after the async canvas work
+    // above has consumed the original click activation. Keep a synchronous
+    // selection fallback so the desktop download path still hands the user
+    // the referral link it claims to share.
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.readOnly = true;
+    textarea.setAttribute("aria-hidden", "true");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      textarea.remove();
+    }
   }
 }
 
@@ -216,7 +236,11 @@ export async function askAFriend(input: ShareLookInput): Promise<AskFriendResult
   const copied = await copyText(text);
   if (card) {
     downloadBlob(card, "tmoi-look.jpg");
-    return finalize("downloaded", copied ? "download+copy" : "download");
+    // A downloaded image without its referral link is not a completed
+    // distribution action. Do not mint bonus credits or count a share when
+    // the browser blocked both clipboard strategies.
+    if (!copied) return { outcome: "failed", bonusAdded: 0 };
+    return finalize("downloaded", "download+copy");
   }
   if (copied) {
     return finalize("downloaded", "copy-only");
