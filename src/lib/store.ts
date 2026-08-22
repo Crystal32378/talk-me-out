@@ -175,15 +175,23 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   hydrateFromDB: async () => {
     if (get().hydrated) return;
-    const [person, looks] = await Promise.all([
-      db.loadPersonPhoto(),
-      db.loadAllLooks(),
-    ]);
-    set({
-      personImage: person?.dataUrl ?? null,
-      savedResults: looks,
-      hydrated: true,
-    });
+    try {
+      const [person, looks] = await Promise.all([
+        db.loadPersonPhoto(),
+        db.loadAllLooks(),
+      ]);
+      set({
+        personImage: person?.dataUrl ?? null,
+        savedResults: looks,
+      });
+    } catch {
+      // Persistence is optional. Safari can reject IndexedDB access (for
+      // example in restricted/private storage contexts), but that must not
+      // strand the entire product behind the hydration loading guard.
+      set({ personImage: null, savedResults: [] });
+    } finally {
+      set({ hydrated: true });
+    }
   },
 
   setPersonImage: async (dataUrl) => {
