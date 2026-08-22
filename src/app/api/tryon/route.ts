@@ -8,6 +8,7 @@ import {
   runFullTryOn,
   YouCamError,
 } from "@/lib/youcam-client";
+import { reserveGeneration } from "@/lib/quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -230,6 +231,44 @@ export async function POST(req: NextRequest) {
     // 1) Try real YouCam API if configured.
     const config = getYouCamConfig();
     if (config) {
+      // Budget guardrail — enforced BEFORE the upstream call so reloads
+      // or a cleared localStorage cannot burn YouCam credits. The user
+      // bucket keys on the device's anonId; requests without one share a
+      // per-IP bucket so the header cannot simply be dropped to bypass it.
+      const anonHeader = req.headers.get("x-tmoi-anon") ?? "";
+      const quotaId = /^[a-z0-9-]{1,32}$/i.test(anonHeader)
+        ? anonHeader
+        : `ip:${req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"}`;
+      const quota = await reserveGeneration(quotaId);
+      if (!quota.ok) {
+        if (quota.reason === "global-quota") {
+          // The launch budget is spent. Never call YouCam again; keep the
+          // product demoable via the clearly-labeled pre-generated result.
+          const demo = await buildDemoComposite();
+          if (demo.ok) {
+            return NextResponse.json({
+              ok: true,
+              imageUrl: demo.imageUrl,
+              demo: true,
+              fallback: false,
+              youcamError: "quota-exhausted",
+            });
+          }
+          return NextResponse.json(
+            { ok: false, error: "quota-exhausted", fallback: true },
+            { status: 429 },
+          );
+        }
+        return NextResponse.json(
+          { ok: false, error: "user-quota", fallback: true },
+          { status: 429 },
+        );
+      }
+
+      // True once YouCam itself has produced a result — from that point the
+      // upstream credits are spent, so the reservation must never be
+      // refunded even if later post-processing (compression) fails.
+      let generated = false;
       try {
         const result = await runFullTryOn(
           config,
@@ -244,6 +283,9 @@ export async function POST(req: NextRequest) {
           },
           { intervalMs: 2000, timeoutMs: 55_000 },
         );
+        generated = true;
+        // Success — the reservation stands (successful generations count).
+        await quota.commit();
         const elapsed = Date.now() - tStart;
         return NextResponse.json({
           ok: true,
@@ -254,6 +296,11 @@ export async function POST(req: NextRequest) {
           elapsedMs: elapsed,
         });
       } catch (err) {
+        // Refund only when the generation itself failed — failures are
+        // free by spec, but a post-generation error already spent credits.
+        if (!generated) {
+          await quota.release();
+        }
         const code = classifyError(err);
         // Fall through to demo mode. Only the machine-readable error code is
         // returned to the client; the raw error message is kept server-side

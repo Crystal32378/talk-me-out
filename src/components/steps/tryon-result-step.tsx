@@ -2,11 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, RefreshCw, ArrowRight, Shirt } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ArrowRight, Shirt, Users } from "lucide-react";
 import { StepHeader } from "./step-header";
 import { UI_COPY } from "@/lib/copy";
 import { useFlowStore } from "@/lib/store";
+import { track } from "@/lib/analytics";
+import {
+  CREDITS_CHANGED_EVENT,
+  consumeTryOn,
+  getAnonId,
+  remainingTryOns,
+} from "@/lib/growth";
+import { askAFriend } from "@/lib/share-card";
+import { useToast } from "@/hooks/use-toast";
 import type { TryOnResult } from "@/lib/types";
+
+/** Live view of the device's remaining try-on credits. */
+function useRemainingTryOns(): number {
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    const sync = () => setRemaining(remainingTryOns());
+    sync();
+    window.addEventListener(CREDITS_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(CREDITS_CHANGED_EVENT, sync);
+  }, []);
+  return remaining;
+}
 
 /**
  * Module-level guard against double-running the try-on for the same
@@ -126,6 +147,10 @@ function getErrorMessage(errorKey: string | null): string {
       return UI_COPY.tryon.errors.timeout;
     case "empty":
       return UI_COPY.tryon.errors.empty;
+    case "quota-exhausted":
+      return UI_COPY.tryon.errors.quotaExhausted;
+    case "user-quota":
+      return UI_COPY.tryon.errors.userQuota;
     default:
       return UI_COPY.tryon.errors.api;
   }
@@ -145,8 +170,15 @@ export function TryOnResultStep() {
   const saveCurrentResultToFittingRoom = useFlowStore((s) => s.saveCurrentResultToFittingRoom);
   const tryAnotherGarment = useFlowStore((s) => s.tryAnotherGarment);
 
+  const savedResults = useFlowStore((s) => s.savedResults);
+  const { toast } = useToast();
+
   const [progressStep, setProgressStep] = useState(0);
   const [usedCache, setUsedCache] = useState(false);
+  // True when the device has no try-on credits left — the scarcity gate.
+  const [blocked, setBlocked] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const remaining = useRemainingTryOns();
 
   // Kick off the try-on once per mount (or retry).
   const runTryOn = async (opts: { forceFresh?: boolean } = {}) => {
@@ -168,6 +200,16 @@ export function TryOnResultStep() {
         return;
       }
     }
+
+    // Scarcity gate — cached looks above are always free; a fresh YouCam
+    // call requires a credit. (The server enforces the global budget
+    // independently; this gate is the honest-user UX layer.)
+    if (remainingTryOns() <= 0) {
+      setBlocked(true);
+      return;
+    }
+    setBlocked(false);
+
     setUsedCache(false);
     setTryOnLoading();
     setProgressStep(0);
@@ -191,6 +233,7 @@ export function TryOnResultStep() {
 
       const res = await fetch("/api/tryon", {
         method: "POST",
+        headers: { "x-tmoi-anon": getAnonId() },
         body: form,
       });
       const data = (await res.json()) as {
@@ -212,6 +255,14 @@ export function TryOnResultStep() {
           fallback: !!data.fallback,
           unitsUsed: data.unitsUsed,
         };
+        // Only a REAL successful generation consumes a credit — demo,
+        // fallback, API failures and timeouts are free by design.
+        if (!result.demo && !result.fallback) {
+          consumeTryOn();
+          track("successful_tryon", {
+            garment: garment.isDefault ? garment.id : "custom",
+          });
+        }
         setTryOnSuccess(result);
         // NOTE: on a fresh flow this is a no-op — the store refuses to
         // save without a completed verdict (see store.ts), so nothing is
@@ -269,6 +320,47 @@ export function TryOnResultStep() {
   const showDemo = tryOn?.demo === true && !showFallback;
   const showCached = usedCache && !showFallback && !showDemo;
 
+  // "Ask a Friend" — shares the current real look when there is one,
+  // otherwise the most recent saved look. The card is composed on-device;
+  // no user photo is ever uploaded or hosted by us (see share-card.ts).
+  const shareableImage =
+    tryOn?.imageUrl && !tryOn.demo && !tryOn.fallback
+      ? tryOn.imageUrl
+      : savedResults[0]?.tryOnImage ?? null;
+
+  const handleAskFriend = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const res = await askAFriend({
+        imageUrl: shareableImage,
+        garmentName: garment?.name ?? savedResults[0]?.garmentName ?? null,
+      });
+      if (res.outcome === "cancelled") {
+        toast({ title: UI_COPY.growth.shareCancelledToast });
+        return;
+      }
+      if (res.outcome === "failed") {
+        toast({ title: UI_COPY.growth.shareFailedToast, variant: "destructive" });
+        return;
+      }
+      if (res.outcome === "downloaded") {
+        toast({ title: UI_COPY.growth.shareDownloadedToast });
+      }
+      if (res.bonusAdded > 0) {
+        toast({ title: UI_COPY.growth.bonusUnlockedToast });
+        if (blocked) {
+          setBlocked(false);
+          void runTryOn();
+        }
+      } else if (res.outcome === "shared") {
+        toast({ title: UI_COPY.growth.bonusAlreadyMaxToast });
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <div className="mx-auto flex min-h-[100svh] max-w-4xl flex-col px-5 py-8">
       <StepHeader
@@ -280,7 +372,54 @@ export function TryOnResultStep() {
         backLabel={UI_COPY.tryon.back}
       />
 
+      {/* Try-on credits — the scarcity mechanic, always visible here */}
+      <div className="mb-4 flex justify-end">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
+            remaining > 0
+              ? "border-warm-accent/50 bg-warm-accent/10 text-warm-accent"
+              : "border-[#ff3b30]/50 bg-[#ff3b30]/10 text-[#ff5147]"
+          }`}
+        >
+          {UI_COPY.growth.creditsChip(remaining)}
+        </span>
+      </div>
+
       <div className="flex-1">
+        {/* Out of credits — the Ask-a-Friend unlock gate */}
+        {blocked && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 flex flex-col gap-4 border border-warm-accent/50 bg-warm-accent/5 p-6"
+          >
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-warm-accent" />
+              <h3 className="font-display text-base font-bold text-foreground">
+                {UI_COPY.growth.outOfTryOnsHeading}
+              </h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {UI_COPY.growth.outOfTryOnsBody}
+            </p>
+            <button
+              type="button"
+              onClick={handleAskFriend}
+              disabled={sharing}
+              className="inline-flex items-center justify-center gap-2 self-start rounded-md bg-[#ff3b30] px-7 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all hover:bg-[#ff5147] active:scale-[0.98] disabled:opacity-60"
+            >
+              {sharing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Users className="h-3.5 w-3.5" />
+              )}
+              {UI_COPY.growth.unlockCta}
+            </button>
+            <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+              {UI_COPY.growth.askFriendHint}
+            </p>
+          </motion.div>
+        )}
         {isLoading && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -466,6 +605,21 @@ export function TryOnResultStep() {
                   <Shirt className="h-3.5 w-3.5" />
                   {UI_COPY.tryon.tryAnotherCta}
                 </button>
+                {shareableImage && (
+                  <button
+                    type="button"
+                    onClick={handleAskFriend}
+                    disabled={sharing}
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-warm-accent/60 bg-warm-accent/5 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-warm-accent transition-colors hover:bg-warm-accent/10 disabled:opacity-60"
+                  >
+                    {sharing ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Users className="h-3.5 w-3.5" />
+                    )}
+                    {UI_COPY.growth.askFriendCta}
+                  </button>
+                )}
               </div>
               <div className="flex flex-col gap-1">
                 <button

@@ -245,6 +245,10 @@ export const UI_COPY = {
       api: "The YouCam API returned an error. You can continue in side-by-side mode.",
       timeout: "The request timed out. You can retry or continue in side-by-side mode.",
       empty: "The API returned an empty response. You can retry or continue in side-by-side mode.",
+      quotaExhausted:
+        "The launch-week try-on budget is fully used, so this is a pre-generated demo result. Everything else still works.",
+      userQuota:
+        "This device has reached its try-on limit for the launch. Your saved looks remain open in My Fitting Room.",
     },
   },
   interrogation: {
@@ -299,5 +303,28 @@ export const UI_COPY = {
     privacyNote: "Your fitting photo and saved results are stored on this device. New try-ons send the selected photo and garment to YouCam for processing. Talk Me Out of It keeps no account or cloud history. Clear local data anytime.",
     decisionBadgeTryIrl: "TRY IN PERSON",
     decisionBadgeSkip: "SKIP",
+  },
+  growth: {
+    creditsChip: (n: number) => `${n} try-on${n === 1 ? "" : "s"} left`,
+    askFriendCta: "Ask a friend",
+    askFriendHint:
+      "Send this look to a friend for a second opinion. The share card is composed on your device — we never upload it or store your portrait on our own servers.",
+    outOfTryOnsHeading: "You are out of try-ons.",
+    outOfTryOnsBody:
+      "Everyone starts with 2. Ask a friend for a second opinion — a successful share unlocks 3 more (5 total, that is the ceiling). Your saved looks stay open in My Fitting Room either way.",
+    unlockCta: "Ask a friend · unlock +3",
+    bonusUnlockedToast: "+3 try-ons unlocked",
+    bonusAlreadyMaxToast: "Shared — you already hold the maximum try-ons.",
+    shareDownloadedToast: "Card saved and link copied — send them together",
+    shareCancelledToast: "Share cancelled",
+    shareFailedToast: "Sharing is not available in this browser.",
+  },
+  feedback: {
+    heading: "Was this verdict fair?",
+    yesCta: "Fair",
+    noCta: "Off the mark",
+    placeholder: "One line if you like (optional)",
+    submitCta: "Send",
+    thanks: "Thanks — noted.",
   },
 };

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { initGrowthTracking } from "@/lib/analytics";
 import { useFlowStore } from "@/lib/store";
 import { IntroStep } from "@/components/steps/intro-step";
 import { PhotoUploadStep } from "@/components/steps/photo-upload-step";
@@ -21,6 +22,12 @@ export default function Home() {
   useEffect(() => {
     void hydrateFromDB();
   }, [hydrateFromDB]);
+
+  // Capture ?ref/?src attribution and fire the anonymous funnel events
+  // (visitor once per session, referral_open once per device).
+  useEffect(() => {
+    initGrowthTracking();
+  }, []);
 
   // Avoid rendering any step until we've at least attempted hydration,
   // so the photo-upload step doesn't briefly show "no photo" before
